@@ -284,6 +284,22 @@ export default function DriverManagementPage() {
       {/* Main Body */}
       <main className="max-w-7xl mx-auto px-4 md:px-8 mt-8">
         
+        {/* Module Sub-Navbar Navigation */}
+        <div className="flex border-b border-white/5 mb-8 gap-6 text-xs md:text-sm font-semibold">
+          <a
+            href="/drivers"
+            className="pb-3 border-b-2 border-[#F5A623] text-[#F5A623] flex items-center gap-2 transition-colors"
+          >
+            <User size={16} /> Drivers
+          </a>
+          <a
+            href="/maintenance"
+            className="pb-3 border-b-2 border-transparent text-[#6B7FA3] flex items-center gap-2 hover:text-[#F0F4FF] hover:border-white/10 transition-colors"
+          >
+            <Calendar size={16} /> Maintenance
+          </a>
+        </div>
+        
         {/* Page Title Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
