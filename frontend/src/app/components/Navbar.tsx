@@ -2,14 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { List, X, CaretDown } from "@phosphor-icons/react";
+import { List, X } from "@phosphor-icons/react";
 
 const navLinks = [
-  { label: "Features", href: "#features", hasDropdown: true },
-  { label: "Modules", href: "#modules", hasDropdown: true },
-  { label: "Analytics", href: "#stats" },
-  { label: "Pricing", href: "#pricing", disabled: true },
-  { label: "Documentation", href: "#docs" },
+  { label: "Features", href: "#features" },
 ];
 
 export default function Navbar() {
@@ -99,22 +95,22 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <nav
-            style={{ display: "flex", alignItems: "center", gap: "2px", flex: 1, justifyContent: "center" }}
+            style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, justifyContent: "flex-end" }}
             className="nav-desktop"
           >
             {navLinks.map((link) => (
               <a
                 key={link.label}
-                href={link.disabled ? undefined : link.href}
+                href={link.href}
                 id={`nav-${link.label.toLowerCase()}`}
                 style={{
                   padding: "6px 13px",
                   borderRadius: "7px",
                   fontSize: "0.875rem",
                   fontWeight: 500,
-                  color: link.disabled ? "#2D3F5E" : "#6B7FA3",
+                  color: "#6B7FA3",
                   textDecoration: "none",
-                  cursor: link.disabled ? "not-allowed" : "pointer",
+                  cursor: "pointer",
                   transition: "color 150ms ease, background 150ms ease",
                   display: "flex",
                   alignItems: "center",
@@ -122,35 +118,17 @@ export default function Navbar() {
                   whiteSpace: "nowrap",
                 }}
                 onMouseEnter={(e) => {
-                  if (!link.disabled) {
-                    const el = e.currentTarget as HTMLAnchorElement;
-                    el.style.color = "#F0F4FF";
-                    el.style.background = "rgba(255,255,255,0.06)";
-                  }
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.color = "#F0F4FF";
+                  el.style.background = "rgba(255,255,255,0.06)";
                 }}
                 onMouseLeave={(e) => {
                   const el = e.currentTarget as HTMLAnchorElement;
-                  el.style.color = link.disabled ? "#2D3F5E" : "#6B7FA3";
+                  el.style.color = "#6B7FA3";
                   el.style.background = "transparent";
                 }}
               >
                 {link.label}
-                {link.hasDropdown && <CaretDown size={12} />}
-                {link.disabled && (
-                  <span
-                    style={{
-                      fontSize: "0.625rem",
-                      fontWeight: 700,
-                      color: "#F5A623",
-                      background: "rgba(245,166,35,0.12)",
-                      padding: "1px 5px",
-                      borderRadius: "4px",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    SOON
-                  </span>
-                )}
               </a>
             ))}
           </nav>
@@ -173,9 +151,6 @@ export default function Navbar() {
               onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#6B7FA3")}
             >
               Login
-            </a>
-            <a href="/drivers" id="nav-launch" className="btn-primary" style={{ padding: "8px 18px", fontSize: "0.875rem" }}>
-              Launch App
             </a>
           </div>
 
@@ -224,16 +199,16 @@ export default function Navbar() {
               {navLinks.map((link) => (
                 <a
                   key={link.label}
-                  href={link.disabled ? undefined : link.href}
-                  onClick={() => !link.disabled && setMobileOpen(false)}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
                   style={{
                     padding: "10px 12px",
                     borderRadius: "8px",
                     fontSize: "0.9375rem",
                     fontWeight: 500,
-                    color: link.disabled ? "#2D3F5E" : "#6B7FA3",
+                    color: "#6B7FA3",
                     textDecoration: "none",
-                    cursor: link.disabled ? "not-allowed" : "pointer",
+                    cursor: "pointer",
                   }}
                 >
                   {link.label}
@@ -242,7 +217,6 @@ export default function Navbar() {
             </nav>
             <div style={{ display: "flex", gap: "10px" }}>
               <a href="/login" className="btn-ghost" style={{ flex: 1, justifyContent: "center" }}>Login</a>
-              <a href="/drivers" className="btn-primary" style={{ flex: 1, justifyContent: "center" }}>Launch App</a>
             </div>
           </motion.div>
         )}

@@ -1,7 +1,6 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowRight, Play } from "@phosphor-icons/react";
 
 export default function Hero() {
   const reduceMotion = useReducedMotion();
@@ -10,7 +9,7 @@ export default function Hero() {
     <section
       id="hero"
       style={{
-        minHeight: "100dvh",
+        minHeight: "auto",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -53,32 +52,10 @@ export default function Hero() {
             textAlign: "center",
             gap: "24px",
             maxWidth: "760px",
-            paddingTop: "60px",
+            paddingTop: "80px",
             paddingBottom: "80px",
           }}
         >
-          {/* Live badge */}
-          <motion.div
-            initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.45, delay: 0.7, ease: [0.23, 1, 0.32, 1] }}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "7px",
-              background: "rgba(245,166,35,0.08)",
-              border: "1px solid rgba(245,166,35,0.2)",
-              borderRadius: "100px",
-              padding: "5px 14px 5px 8px",
-              fontSize: "0.8rem",
-              fontWeight: 500,
-              color: "#D4891A",
-            }}
-          >
-            <span className="pulse-dot" style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#F5A623", display: "inline-block" }} />
-            Live fleet tracking — 53 vehicles active now
-          </motion.div>
-
           <motion.h1
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -105,20 +82,6 @@ export default function Hero() {
             Digitize your fleet with a centralized platform for vehicle management,
             driver tracking, dispatch, maintenance, fuel monitoring, and analytics.
           </motion.p>
-
-          <motion.div
-            initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.94, ease: [0.23, 1, 0.32, 1] }}
-            style={{ display: "flex", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}
-          >
-            <a href="/drivers" id="hero-launch-cta" className="btn-primary" style={{ padding: "13px 28px", fontSize: "0.9375rem" }}>
-              Launch App <ArrowRight size={17} weight="bold" />
-            </a>
-            <a href="#demo" id="hero-demo-cta" className="btn-ghost" style={{ padding: "13px 28px", fontSize: "0.9375rem" }}>
-              <Play size={15} weight="fill" /> View Demo
-            </a>
-          </motion.div>
         </div>
       </div>
     </section>
