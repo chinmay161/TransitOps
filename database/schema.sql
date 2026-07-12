@@ -65,6 +65,19 @@ CREATE TYPE expense_category AS ENUM (
     'other'
 );
 
+-- Approval workflow — Visitor → Fleet Manager Application → Pending → Admin Approval → Fleet Manager
+-- A visitor registers as a Fleet Manager applicant (role = fleet_manager, approval_status = pending).
+-- Pending applicants have basic access only (login, profile, application status).
+-- An Admin reviews and either approves or rejects the application.
+-- On approval: approval_status becomes approved; the Fleet Manager gains full permissions.
+-- Approved Fleet Managers can create Drivers and Dispatchers.
+-- Drivers and Dispatchers cannot self-register; they are created by Fleet Managers.
+CREATE TYPE approval_status AS ENUM (
+    'pending',
+    'approved',
+    'rejected'
+);
+
 -- =====================================================
 -- USERS
 -- =====================================================
@@ -74,17 +87,24 @@ CREATE TABLE users (
     password_hash   TEXT          NOT NULL,
     full_name       VARCHAR(255)  NOT NULL,
     phone           VARCHAR(50),
-    role            user_role     NOT NULL,
-    is_active       BOOLEAN       NOT NULL DEFAULT true,
+    role            user_role         NOT NULL DEFAULT 'fleet_manager',
+    approval_status approval_status   NOT NULL DEFAULT 'pending',
+    approved_at     TIMESTAMPTZ,
+    approved_by     UUID,
+    rejection_reason TEXT,
+    is_active       BOOLEAN           NOT NULL DEFAULT true,
     last_login      TIMESTAMPTZ,
     created_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
 
     CONSTRAINT uq_users_email UNIQUE (email),
+    CONSTRAINT fk_users_approved_by FOREIGN KEY (approved_by)
+        REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ck_users_phone CHECK (phone IS NULL OR phone ~ '^\+?[0-9\s\-\(\)]{7,20}$')
 );
 
 CREATE INDEX idx_users_role ON users (role);
+CREATE INDEX idx_users_approval_status ON users (approval_status);
 
 -- =====================================================
 -- DRIVERS
@@ -99,6 +119,9 @@ CREATE TABLE drivers (
     emergency_contact   VARCHAR(255),
     emergency_phone     VARCHAR(50),
     hire_date           DATE          NOT NULL,
+    -- fleet_manager_id links this driver/dispatcher to the Fleet Manager who created/manages them
+    -- A driver or dispatcher cannot exist without a Fleet Manager (except pending users)
+    fleet_manager_id    UUID,
     created_at          TIMESTAMPTZ   NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ   NOT NULL DEFAULT now(),
 
@@ -106,12 +129,15 @@ CREATE TABLE drivers (
     CONSTRAINT uq_drivers_license_number UNIQUE (license_number),
     CONSTRAINT fk_drivers_user FOREIGN KEY (user_id)
         REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_drivers_fleet_manager FOREIGN KEY (fleet_manager_id)
+        REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ck_drivers_license_expiry CHECK (license_expiry > '1900-01-01'),
     CONSTRAINT ck_drivers_hire_date CHECK (hire_date <= CURRENT_DATE),
     CONSTRAINT ck_drivers_emergency_phone CHECK (emergency_phone IS NULL OR emergency_phone ~ '^\+?[0-9\s\-\(\)]{7,20}$')
 );
 
 CREATE INDEX idx_drivers_status ON drivers (status);
+CREATE INDEX idx_drivers_fleet_manager_id ON drivers (fleet_manager_id);
 
 -- =====================================================
 -- VEHICLES
