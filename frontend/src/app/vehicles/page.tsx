@@ -23,6 +23,7 @@ import {
   GasPump,
   ArrowsClockwise,
 } from "@phosphor-icons/react";
+import Link from "next/link";
 import { vehicleService } from "@/lib/vehicle.service";
 import type {
   Vehicle,
@@ -39,7 +40,7 @@ const currentYear = new Date().getFullYear();
 
 const vehicleSchema = z.object({
   registration_number: z.string().min(1, "Registration number is required"),
-  vin: z.string().default(""),
+  vin: z.string(),
   make: z.string().min(1, "Make is required"),
   model: z.string().min(1, "Model is required"),
   year: z
@@ -56,47 +57,38 @@ const vehicleSchema = z.object({
     (val) => ["petrol", "diesel", "cng", "electric", "other"].includes(val),
     { message: "Invalid fuel type" },
   ),
-  vehicle_type: z.string().default(""),
-  color: z.string().default(""),
-  seating_capacity: z.string().default(""),
+  vehicle_type: z.string(),
+  color: z.string(),
+  seating_capacity: z.string(),
   current_odometer: z
     .string()
     .min(1, "Current odometer is required")
     .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
       message: "Odometer must be 0 or greater",
     }),
-  insurance_number: z.string().default(""),
-  insurance_expiry: z
-    .string()
-    .default("")
-    .refine(
-      (val) => {
-        if (!val) return true;
-        return new Date(val) >= new Date(new Date().toDateString());
-      },
-      { message: "Insurance expiry cannot be before today" },
-    ),
-  rc_number: z.string().default(""),
-  registration_expiry: z
-    .string()
-    .default("")
-    .refine(
-      (val) => {
-        if (!val) return true;
-        return new Date(val) >= new Date(new Date().toDateString());
-      },
-      { message: "Registration expiry cannot be before today" },
-    ),
-  puc_expiry: z
-    .string()
-    .default("")
-    .refine(
-      (val) => {
-        if (!val) return true;
-        return new Date(val) >= new Date(new Date().toDateString());
-      },
-      { message: "PUC expiry cannot be before today" },
-    ),
+  insurance_number: z.string(),
+  insurance_expiry: z.string().refine(
+    (val) => {
+      if (!val) return true;
+      return new Date(val) >= new Date(new Date().toDateString());
+    },
+    { message: "Insurance expiry cannot be before today" },
+  ),
+  rc_number: z.string(),
+  registration_expiry: z.string().refine(
+    (val) => {
+      if (!val) return true;
+      return new Date(val) >= new Date(new Date().toDateString());
+    },
+    { message: "Registration expiry cannot be before today" },
+  ),
+  puc_expiry: z.string().refine(
+    (val) => {
+      if (!val) return true;
+      return new Date(val) >= new Date(new Date().toDateString());
+    },
+    { message: "PUC expiry cannot be before today" },
+  ),
   status: z.string().min(1, "Status is required").refine(
     (val) => ["available", "assigned", "maintenance", "inactive"].includes(val),
     { message: "Invalid status" },
@@ -169,10 +161,11 @@ export default function VehicleManagementPage() {
       filters.sort = sortOrder;
       const data = await vehicleService.list(filters);
       setVehicles(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An error occurred";
       console.error(err);
-      setError(err.message || "An error occurred while loading vehicles.");
-      showToast("error", err.message || "Could not connect to the backend server.");
+      setError(message);
+      showToast("error", message);
     } finally {
       setLoading(false);
     }
@@ -231,8 +224,9 @@ export default function VehicleManagementPage() {
       setActiveModal(null);
       reset();
       setVehicles((prev) => [...prev, vehicle]);
-    } catch (err: any) {
-      showToast("error", err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create vehicle";
+      showToast("error", message);
     }
   };
 
@@ -248,8 +242,9 @@ export default function VehicleManagementPage() {
       setSelectedVehicle(null);
       reset();
       setVehicles((prev) => prev.map((v) => (v.id === updated.id ? updated : v)));
-    } catch (err: any) {
-      showToast("error", err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to update vehicle";
+      showToast("error", message);
     }
   };
 
@@ -261,8 +256,9 @@ export default function VehicleManagementPage() {
       setActiveModal(null);
       setSelectedVehicle(null);
       setVehicles((prev) => prev.filter((v) => v.id !== selectedVehicle.id));
-    } catch (err: any) {
-      showToast("error", err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to delete vehicle";
+      showToast("error", message);
     }
   };
 
@@ -316,7 +312,7 @@ export default function VehicleManagementPage() {
   return (
     <div className="min-h-screen bg-[#070D1A] text-[#F0F4FF] dot-grid relative pb-16">
       <header className="sticky top-0 z-40 bg-[#070D1A]/90 backdrop-blur-md border-b border-white/5 py-4 px-6 md:px-12 flex justify-between items-center">
-        <a href="/" className="flex items-center gap-2 group text-decoration-none">
+        <Link href="/" className="flex items-center gap-2 group text-decoration-none">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#F5A623] to-[#D4891A] flex items-center justify-center shadow-md">
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
               <rect x="1" y="8" width="11" height="7" rx="1.5" fill="white" fillOpacity="0.95" />
@@ -328,14 +324,14 @@ export default function VehicleManagementPage() {
           <span className="font-bold text-[#F0F4FF] tracking-tight group-hover:text-[#F5A623] transition-colors">
             TransitOps
           </span>
-        </a>
+        </Link>
         <div className="flex items-center gap-4">
-          <a
+          <Link
             href="/"
             className="flex items-center gap-1.5 text-xs text-[#6B7FA3] hover:text-[#F0F4FF] transition-colors font-medium"
           >
             <CaretLeft size={14} /> Back to Landing Page
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -482,7 +478,7 @@ export default function VehicleManagementPage() {
             <Warning size={42} className="text-[#ef4444] mx-auto mb-3" />
             <h3 className="font-bold text-[#F0F4FF]">Server Connection Failure</h3>
             <p className="text-xs text-[#6B7FA3] max-w-md mx-auto mt-1 mb-4">
-              We couldn't connect to the backend server. Make sure the API server is active on `{API_URL}`.
+              We couldn&apos;t connect to the backend server. Make sure the API server is active on `{API_URL}`.
             </p>
             <button onClick={loadVehicles} className="btn-ghost text-xs">
               Retry Connection

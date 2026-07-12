@@ -29,7 +29,7 @@ function mapBackendVehicle(raw: Record<string, unknown>): Vehicle {
   };
 }
 
-let mockVehicles: Vehicle[] = [
+const mockVehicles: Vehicle[] = [
   {
     id: "mock-1",
     registration_number: "MH-12-AB-1234",
