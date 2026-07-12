@@ -212,6 +212,18 @@ export async function registerDriver(
     role: 'driver',
   });
 
+  const licenseNumber = `TEMP-${user.id.substring(0, 8).toUpperCase()}`;
+  const licenseExpiry = new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const hireDate = new Date().toISOString().split('T')[0];
+
+  await repo.insertDriver({
+    userId: user.id,
+    licenseNumber,
+    licenseExpiry,
+    licenseType: 'Standard',
+    hireDate,
+  });
+
   await sendVerificationEmail({
     to: user.email,
     fullName: user.full_name,

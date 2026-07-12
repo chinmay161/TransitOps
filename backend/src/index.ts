@@ -19,6 +19,7 @@ import { createExpenseRouter } from "./routes/expenseRoutes";
 import { createFuelLogRouter } from "./routes/fuelLogRoutes";
 import { createNotificationRouter } from "./routes/notificationRoutes";
 import { createReportRouter } from "./routes/reportRoutes";
+import userRouter from "./routes/userRoutes";
 import { AdminSettingsService } from "./services/adminSettingsService";
 import { DashboardService } from "./services/dashboardService";
 import { ExpenseService } from "./services/expenseService";
@@ -26,7 +27,7 @@ import { FuelLogService } from "./services/fuelLogService";
 import { NotificationService } from "./services/notificationService";
 import { ReportService } from "./services/reportService";
 import { ApiError, sendError } from "./utils/api";
-import { authRouter } from "./modules/auth/index.js";
+import { authRouter, authenticate, authorizeModule, authorize } from "./modules/auth/index.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -164,6 +165,12 @@ app.get("/db-test", async (_req: Request, res: Response) => {
     sendError(res, 500, message);
   }
 });
+
+app.use('/drivers', authenticate, authorizeModule('drivers'));
+app.use('/vehicles', authenticate, authorizeModule('vehicles'));
+app.use('/maintenance', authenticate, authorizeModule('maintenance'));
+app.use('/trips', authenticate, authorizeModule('trips'));
+app.use('/api/verification', authenticate, authorizeModule('drivers'));
 
 // GET /drivers - Fetch all drivers with joined users
 app.get('/drivers', async (req: Request, res: Response) => {
@@ -989,12 +996,13 @@ app.post('/api/verification/verify', async (req: Request, res: Response) => {
   }
 });
 
-app.use("/api/fuel-logs", createFuelLogRouter(fuelLogController));
-app.use("/api/dashboard", createDashboardRouter(dashboardController));
-app.use("/api/expenses", createExpenseRouter(expenseController));
-app.use("/api/reports", createReportRouter(reportController));
-app.use("/api/notifications", createNotificationRouter(notificationController));
-app.use("/api/admin-settings", createAdminSettingsRouter(adminSettingsController));
+app.use("/api/fuel-logs", authenticate, authorizeModule('fuel_logs'), createFuelLogRouter(fuelLogController));
+app.use("/api/dashboard", authenticate, authorizeModule('dashboard'), createDashboardRouter(dashboardController));
+app.use("/api/expenses", authenticate, authorizeModule('expenses'), createExpenseRouter(expenseController));
+app.use("/api/reports", authenticate, authorizeModule('reports'), createReportRouter(reportController));
+app.use("/api/notifications", authenticate, authorizeModule('notifications'), createNotificationRouter(notificationController));
+app.use("/api/admin-settings", authenticate, authorize('admin'), createAdminSettingsRouter(adminSettingsController));
+app.use("/api/users", userRouter);
 
 // GET /api/verification/status/:driverId - Get verification status of a driver
 app.get('/api/verification/status/:driverId', (req: Request, res: Response) => {

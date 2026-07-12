@@ -109,4 +109,24 @@ export async function insertUser(params: {
   return result.rows[0];
 }
 
+export async function insertDriver(params: {
+  userId: string;
+  licenseNumber: string;
+  licenseExpiry: string;
+  licenseType: string;
+  hireDate: string;
+}): Promise<void> {
+  await pool.query(
+    `INSERT INTO drivers (user_id, license_number, license_expiry, license_type, status, hire_date)
+     VALUES ($1, $2, $3, $4, 'available', $5)`,
+    [
+      params.userId,
+      params.licenseNumber,
+      params.licenseExpiry,
+      params.licenseType,
+      params.hireDate,
+    ]
+  );
+}
+
 

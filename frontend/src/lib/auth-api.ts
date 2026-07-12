@@ -121,3 +121,20 @@ export interface AuthUser {
 export async function getMe(): Promise<AuthUser> {
   return request<AuthUser>("/api/auth/me");
 }
+
+export interface UserDirectoryEntry {
+  id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  phone: string | null;
+  email_verified: boolean;
+  is_active: boolean;
+  approval_status: string;
+  created_at: string;
+  last_login: string | null;
+}
+
+export async function fetchUsers(): Promise<UserDirectoryEntry[]> {
+  return request<UserDirectoryEntry[]>("/api/users");
+}
