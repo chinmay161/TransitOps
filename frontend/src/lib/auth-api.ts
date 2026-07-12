@@ -116,6 +116,7 @@ export interface AuthUser {
   email_verified: boolean;
   is_active: boolean;
   created_at: string;
+  driver_id?: string;
 }
 
 export async function getMe(): Promise<AuthUser> {

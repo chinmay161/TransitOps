@@ -23,6 +23,10 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("access_token")?.value;
 
+  if (pathname === "/") {
+    return NextResponse.next();
+  }
+
   const isAuthPage = authPaths.some((path) => pathname === path);
 
   if (isAuthPage) {

@@ -1,9 +1,8 @@
 import { Pool } from "pg";
 import { DigiLockerService } from "./DigiLockerService";
-import { VerificationResult, VerificationRecord } from "./types";
+import { VerificationResult } from "./types";
 
 export class MockDigiLockerService implements DigiLockerService {
-  private verificationStore = new Map<string, VerificationRecord>();
   private pool: Pool;
 
   constructor(pool: Pool) {
@@ -51,12 +50,6 @@ export class MockDigiLockerService implements DigiLockerService {
       source: "DigiLocker"
     };
 
-    // Store in-memory status
-    this.verificationStore.set(driverId, {
-      ...verifiedResult,
-      driverId
-    });
-
     // Update driver profile in database to match verified details
     const client = await this.pool.connect();
     try {
@@ -68,13 +61,20 @@ export class MockDigiLockerService implements DigiLockerService {
           license_number = $1,
           license_expiry = $2,
           license_type = $3,
+          verification_status = 'verified',
+          verification_source = $4,
+          verification_date = $5,
+          verification_id = $6,
           updated_at = NOW()
-        WHERE id = $4
+        WHERE id = $7
       `;
       await client.query(updateQuery, [
         verifiedResult.licenseNumber,
         verifiedResult.expiryDate,
         verifiedResult.licenseType,
+        verifiedResult.source,
+        verifiedResult.verifiedAt,
+        verifiedResult.verificationId,
         driverId
       ]);
       
@@ -82,6 +82,7 @@ export class MockDigiLockerService implements DigiLockerService {
     } catch (e: any) {
       await client.query("ROLLBACK");
       console.error("Failed to update database driver with verified details:", e);
+      throw e;
     } finally {
       client.release();
     }
@@ -89,13 +90,35 @@ export class MockDigiLockerService implements DigiLockerService {
     return verifiedResult;
   }
 
-  public getVerificationRecord(driverId: string): VerificationResult | null {
-    const record = this.verificationStore.get(driverId);
-    return record || null;
+  public async getVerificationRecord(driverId: string): Promise<VerificationResult | null> {
+    const query = `
+      SELECT verification_status, verification_source, verification_date, verification_id, license_number, license_type, TO_CHAR(license_expiry, 'YYYY-MM-DD') as license_expiry, u.full_name
+      FROM drivers d
+      JOIN users u ON d.user_id = u.id
+      WHERE d.id = $1
+    `;
+    const res = await this.pool.query(query, [driverId]);
+    if (res.rows.length === 0 || res.rows[0].verification_status !== 'verified') {
+      return null;
+    }
+    const row = res.rows[0];
+    return {
+      verified: true,
+      verificationId: row.verification_id,
+      holderName: row.full_name,
+      licenseNumber: row.license_number,
+      licenseType: row.license_type,
+      issueDate: "2022-03-14",
+      expiryDate: row.license_expiry,
+      issuingAuthority: "Maharashtra RTO",
+      verifiedAt: row.verification_date ? new Date(row.verification_date).toISOString() : new Date().toISOString(),
+      source: row.verification_source || "DigiLocker"
+    };
   }
 
-  public isDriverVerified(driverId: string): boolean {
-    const record = this.verificationStore.get(driverId);
-    return !!(record && record.verified);
+  public async isDriverVerified(driverId: string): Promise<boolean> {
+    const query = "SELECT verification_status FROM drivers WHERE id = $1";
+    const res = await this.pool.query(query, [driverId]);
+    return res.rows.length > 0 && res.rows[0].verification_status === 'verified';
   }
 }

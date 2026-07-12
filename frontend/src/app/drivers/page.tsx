@@ -23,7 +23,8 @@ import {
   User,
   X,
   FileText,
-  ShieldCheck
+  ShieldCheck,
+  SteeringWheel
 } from "@phosphor-icons/react";
 import { DemoSwitcher } from "../../components/DemoSwitcher";
 import { DigiLockerVerificationBlocker } from "../../components/DigiLockerVerificationBlocker";
@@ -303,6 +304,12 @@ export default function DriverManagementPage() {
             className="pb-3 border-b-2 border-[#F5A623] text-[#F5A623] flex items-center gap-2 transition-colors"
           >
             <User size={16} /> Drivers
+          </a>
+          <a
+            href="/vehicles"
+            className="pb-3 border-b-2 border-transparent text-[#6B7FA3] flex items-center gap-2 hover:text-[#F0F4FF] hover:border-white/10 transition-colors"
+          >
+            <SteeringWheel size={16} /> Vehicles
           </a>
           <a
             href="/maintenance"

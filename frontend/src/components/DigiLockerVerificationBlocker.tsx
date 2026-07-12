@@ -43,9 +43,9 @@ export function DigiLockerVerificationBlocker() {
   });
   const [driverId] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("transitops_mock_driver_id") || user?.id || null;
+      return localStorage.getItem("transitops_mock_driver_id") || user?.driver_id || null;
     }
-    return user?.id || null;
+    return user?.driver_id || null;
   });
   
   const [modalOpen, setModalOpen] = useState(false);

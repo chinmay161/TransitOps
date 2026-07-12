@@ -67,6 +67,76 @@ const adminSettingsController = new AdminSettingsController(adminSettingsService
 import { MockDigiLockerService } from "./services/digilocker/MockDigiLockerService";
 const mockDigiLockerService = new MockDigiLockerService(pool);
 
+// Helper for validating vehicle fields
+function validateVehicle(data: any, isUpdate = false) {
+  const errors: string[] = [];
+  const {
+    registration_number,
+    vin,
+    make,
+    model,
+    year,
+    fuel_type,
+    seating_capacity,
+    insurance_expiry,
+    registration_expiry,
+  } = data;
+
+  if (!isUpdate) {
+    if (!registration_number || typeof registration_number !== 'string' || !registration_number.trim()) {
+      errors.push('Registration number is required');
+    }
+    if (!vin || typeof vin !== 'string' || !vin.trim()) {
+      errors.push('VIN is required');
+    }
+    if (!make || typeof make !== 'string' || !make.trim()) {
+      errors.push('Make is required');
+    }
+    if (!model || typeof model !== 'string' || !model.trim()) {
+      errors.push('Model is required');
+    }
+    if (year === undefined || isNaN(Number(year))) {
+      errors.push('Valid year is required');
+    }
+    if (!fuel_type || typeof fuel_type !== 'string' || !fuel_type.trim()) {
+      errors.push('Fuel type is required');
+    }
+    if (seating_capacity === undefined || isNaN(Number(seating_capacity))) {
+      errors.push('Valid seating capacity is required');
+    }
+    if (!insurance_expiry) {
+      errors.push('Insurance expiry date is required');
+    }
+    if (!registration_expiry) {
+      errors.push('Registration expiry date is required');
+    }
+  } else {
+    if (registration_number !== undefined && (!registration_number || typeof registration_number !== 'string' || !registration_number.trim())) {
+      errors.push('Registration number cannot be empty');
+    }
+    if (vin !== undefined && (!vin || typeof vin !== 'string' || !vin.trim())) {
+      errors.push('VIN cannot be empty');
+    }
+    if (make !== undefined && (!make || typeof make !== 'string' || !make.trim())) {
+      errors.push('Make cannot be empty');
+    }
+    if (model !== undefined && (!model || typeof model !== 'string' || !model.trim())) {
+      errors.push('Model cannot be empty');
+    }
+    if (year !== undefined && isNaN(Number(year))) {
+      errors.push('Year must be a number');
+    }
+    if (fuel_type !== undefined && (!fuel_type || typeof fuel_type !== 'string' || !fuel_type.trim())) {
+      errors.push('Fuel type cannot be empty');
+    }
+    if (seating_capacity !== undefined && isNaN(Number(seating_capacity))) {
+      errors.push('Seating capacity must be a number');
+    }
+  }
+
+  return errors;
+}
+
 // Helper for validating driver fields
 function validateDriver(data: any, isUpdate = false) {
   const errors: string[] = [];
@@ -170,7 +240,7 @@ app.use('/drivers', authenticate, authorizeModule('drivers'));
 app.use('/vehicles', authenticate, authorizeModule('vehicles'));
 app.use('/maintenance', authenticate, authorizeModule('maintenance'));
 app.use('/trips', authenticate, authorizeModule('trips'));
-app.use('/api/verification', authenticate, authorizeModule('drivers'));
+app.use('/api/verification', authenticate);
 
 // GET /drivers - Fetch all drivers with joined users
 app.get('/drivers', async (req: Request, res: Response) => {
@@ -189,6 +259,10 @@ app.get('/drivers', async (req: Request, res: Response) => {
         d.fleet_manager_id,
         d.created_at,
         d.updated_at,
+        d.verification_status,
+        d.verification_source,
+        d.verification_id,
+        TO_CHAR(d.verification_date, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as verification_date,
         u.full_name,
         u.email,
         u.phone,
@@ -198,17 +272,7 @@ app.get('/drivers', async (req: Request, res: Response) => {
       ORDER BY u.full_name ASC
     `;
     const result = await pool.query(query);
-    const drivers = result.rows.map(driver => {
-      const verification = mockDigiLockerService.getVerificationRecord(driver.id);
-      return {
-        ...driver,
-        verification_status: verification ? 'verified' : 'pending',
-        verification_source: verification ? verification.source : null,
-        verification_date: verification ? verification.verifiedAt : null,
-        verification_id: verification ? verification.verificationId : null,
-      };
-    });
-    res.json(drivers);
+    res.json(result.rows);
   } catch (error: any) {
     console.error('Error fetching drivers:', error);
     res.status(500).json({ error: 'Failed to fetch drivers', details: error.message });
@@ -233,6 +297,10 @@ app.get('/drivers/:id', async (req: Request, res: Response) => {
         d.fleet_manager_id,
         d.created_at,
         d.updated_at,
+        d.verification_status,
+        d.verification_source,
+        d.verification_id,
+        TO_CHAR(d.verification_date, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as verification_date,
         u.full_name,
         u.email,
         u.phone,
@@ -245,15 +313,7 @@ app.get('/drivers/:id', async (req: Request, res: Response) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Driver not found' });
     }
-    const driver = result.rows[0];
-    const verification = mockDigiLockerService.getVerificationRecord(driver.id);
-    res.json({
-      ...driver,
-      verification_status: verification ? 'verified' : 'pending',
-      verification_source: verification ? verification.source : null,
-      verification_date: verification ? verification.verifiedAt : null,
-      verification_id: verification ? verification.verificationId : null,
-    });
+    res.json(result.rows[0]);
   } catch (error: any) {
     console.error('Error fetching driver:', error);
     res.status(500).json({ error: 'Failed to fetch driver', details: error.message });
@@ -557,6 +617,174 @@ app.get('/vehicles', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Error fetching vehicles:', error);
     res.status(500).json({ error: 'Failed to fetch vehicles', details: error.message });
+  }
+});
+
+// POST /vehicles - Create a new vehicle
+app.post('/vehicles', async (req: Request, res: Response) => {
+  const errors = validateVehicle(req.body, false);
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
+  }
+
+  const {
+    registration_number,
+    vin,
+    make,
+    model,
+    year,
+    fuel_type,
+    seating_capacity,
+    status = 'available',
+    current_odometer = 0,
+    insurance_expiry,
+    registration_expiry,
+    last_maintenance_date,
+    next_maintenance_date,
+  } = req.body;
+
+  try {
+    const query = `
+      INSERT INTO vehicles (
+        registration_number, vin, make, model, year, fuel_type, seating_capacity,
+        status, current_odometer, insurance_expiry, registration_expiry,
+        last_maintenance_date, next_maintenance_date
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      RETURNING *, 
+        TO_CHAR(insurance_expiry, 'YYYY-MM-DD') as insurance_expiry,
+        TO_CHAR(registration_expiry, 'YYYY-MM-DD') as registration_expiry,
+        TO_CHAR(last_maintenance_date, 'YYYY-MM-DD') as last_maintenance_date,
+        TO_CHAR(next_maintenance_date, 'YYYY-MM-DD') as next_maintenance_date
+    `;
+    const result = await pool.query(query, [
+      registration_number.toUpperCase().trim(),
+      vin.toUpperCase().trim(),
+      make.trim(),
+      model.trim(),
+      Number(year),
+      fuel_type,
+      Number(seating_capacity),
+      status,
+      Number(current_odometer),
+      insurance_expiry,
+      registration_expiry,
+      last_maintenance_date || null,
+      next_maintenance_date || null,
+    ]);
+
+    res.status(201).json(result.rows[0]);
+  } catch (error: any) {
+    console.error('Error creating vehicle:', error);
+    if (error.code === '23505') {
+      if (error.constraint === 'uq_vehicles_registration_number') {
+        return res.status(400).json({ error: 'Registration number already exists' });
+      }
+      if (error.constraint === 'uq_vehicles_vin') {
+        return res.status(400).json({ error: 'VIN already exists' });
+      }
+    }
+    res.status(500).json({ error: 'Failed to create vehicle', details: error.message });
+  }
+});
+
+// PUT /vehicles/:id - Update an existing vehicle
+app.put('/vehicles/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const errors = validateVehicle(req.body, true);
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
+  }
+
+  const {
+    registration_number,
+    vin,
+    make,
+    model,
+    year,
+    fuel_type,
+    seating_capacity,
+    status,
+    current_odometer,
+    insurance_expiry,
+    registration_expiry,
+    last_maintenance_date,
+    next_maintenance_date,
+  } = req.body;
+
+  try {
+    const updateQuery = `
+      UPDATE vehicles
+      SET
+        registration_number = COALESCE($1, registration_number),
+        vin = COALESCE($2, vin),
+        make = COALESCE($3, make),
+        model = COALESCE($4, model),
+        year = COALESCE($5, year),
+        fuel_type = COALESCE($6, fuel_type),
+        seating_capacity = COALESCE($7, seating_capacity),
+        status = COALESCE($8, status),
+        current_odometer = COALESCE($9, current_odometer),
+        insurance_expiry = COALESCE($10, insurance_expiry),
+        registration_expiry = COALESCE($11, registration_expiry),
+        last_maintenance_date = COALESCE($12, last_maintenance_date),
+        next_maintenance_date = COALESCE($13, next_maintenance_date),
+        updated_at = NOW()
+      WHERE id = $14
+      RETURNING *,
+        TO_CHAR(insurance_expiry, 'YYYY-MM-DD') as insurance_expiry,
+        TO_CHAR(registration_expiry, 'YYYY-MM-DD') as registration_expiry,
+        TO_CHAR(last_maintenance_date, 'YYYY-MM-DD') as last_maintenance_date,
+        TO_CHAR(next_maintenance_date, 'YYYY-MM-DD') as next_maintenance_date
+    `;
+
+    const result = await pool.query(updateQuery, [
+      registration_number ? registration_number.toUpperCase().trim() : null,
+      vin ? vin.toUpperCase().trim() : null,
+      make ? make.trim() : null,
+      model ? model.trim() : null,
+      year ? Number(year) : null,
+      fuel_type || null,
+      seating_capacity ? Number(seating_capacity) : null,
+      status || null,
+      current_odometer !== undefined ? Number(current_odometer) : null,
+      insurance_expiry || null,
+      registration_expiry || null,
+      last_maintenance_date || null,
+      next_maintenance_date || null,
+      id,
+    ]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Vehicle not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error: any) {
+    console.error('Error updating vehicle:', error);
+    if (error.code === '23505') {
+      if (error.constraint === 'uq_vehicles_registration_number') {
+        return res.status(400).json({ error: 'Registration number already exists' });
+      }
+      if (error.constraint === 'uq_vehicles_vin') {
+        return res.status(400).json({ error: 'VIN already exists' });
+      }
+    }
+    res.status(500).json({ error: 'Failed to update vehicle', details: error.message });
+  }
+});
+
+// DELETE /vehicles/:id - Delete a vehicle
+app.delete('/vehicles/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM vehicles WHERE id = $1 RETURNING id', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Vehicle not found' });
+    }
+    res.json({ id, message: 'Vehicle deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting vehicle:', error);
+    res.status(500).json({ error: 'Failed to delete vehicle', details: error.message });
   }
 });
 
@@ -1005,9 +1233,9 @@ app.use("/api/admin-settings", authenticate, authorize('admin'), createAdminSett
 app.use("/api/users", userRouter);
 
 // GET /api/verification/status/:driverId - Get verification status of a driver
-app.get('/api/verification/status/:driverId', (req: Request, res: Response) => {
+app.get('/api/verification/status/:driverId', async (req: Request, res: Response) => {
   const { driverId } = req.params;
-  const record = mockDigiLockerService.getVerificationRecord(driverId);
+  const record = await mockDigiLockerService.getVerificationRecord(driverId);
   res.json({
     verified: !!record,
     verification: record
@@ -1051,13 +1279,13 @@ app.get('/trips', async (req: Request, res: Response) => {
       ORDER BY t.scheduled_start DESC, t.created_at DESC
     `;
     const result = await pool.query(query);
-    const trips = result.rows.map(trip => {
-      const verified = mockDigiLockerService.isDriverVerified(trip.driver_id);
+    const trips = await Promise.all(result.rows.map(async (trip) => {
+      const verified = await mockDigiLockerService.isDriverVerified(trip.driver_id);
       return {
         ...trip,
         driver_verified: verified
       };
-    });
+    }));
     res.json(trips);
   } catch (error: any) {
     console.error('Error fetching trips:', error);
@@ -1107,7 +1335,7 @@ app.get('/trips/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Trip not found' });
     }
     const trip = result.rows[0];
-    const verified = mockDigiLockerService.isDriverVerified(trip.driver_id);
+    const verified = await mockDigiLockerService.isDriverVerified(trip.driver_id);
     res.json({
       ...trip,
       driver_verified: verified
@@ -1165,7 +1393,7 @@ app.post('/trips', async (req: Request, res: Response) => {
     }
     const driverInfo = driverRes.rows[0];
 
-    const isVerified = mockDigiLockerService.isDriverVerified(driver_id);
+    const isVerified = await mockDigiLockerService.isDriverVerified(driver_id);
     if (!isVerified) {
       await client.query('ROLLBACK');
       return res.status(400).json({ error: 'Driver driving license is unverified. Verification is mandatory.' });
@@ -1297,7 +1525,7 @@ app.put('/trips/:id', async (req: Request, res: Response) => {
       }
       const driverInfo = driverRes.rows[0];
 
-      const isVerified = mockDigiLockerService.isDriverVerified(driver_id);
+      const isVerified = await mockDigiLockerService.isDriverVerified(driver_id);
       if (!isVerified) {
         await client.query('ROLLBACK');
         return res.status(400).json({ error: 'New driver is not verified.' });

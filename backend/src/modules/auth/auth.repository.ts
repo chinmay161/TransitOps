@@ -129,4 +129,12 @@ export async function insertDriver(params: {
   );
 }
 
+export async function findDriverByUserId(userId: string): Promise<{ id: string } | null> {
+  const result = await pool.query<{ id: string }>(
+    'SELECT id FROM drivers WHERE user_id = $1',
+    [userId]
+  );
+  return result.rows[0] || null;
+}
+
 

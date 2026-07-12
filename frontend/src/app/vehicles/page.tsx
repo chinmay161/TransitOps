@@ -22,6 +22,7 @@ import {
   SteeringWheel,
   GasPump,
   ArrowsClockwise,
+  ShieldCheck,
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { vehicleService } from "@/lib/vehicle.service";
@@ -344,16 +345,22 @@ export default function VehicleManagementPage() {
             <User size={16} /> Drivers
           </a>
           <a
+            href="/vehicles"
+            className="pb-3 border-b-2 border-[#F5A623] text-[#F5A623] flex items-center gap-2 transition-colors"
+          >
+            <SteeringWheel size={16} /> Vehicles
+          </a>
+          <a
             href="/maintenance"
             className="pb-3 border-b-2 border-transparent text-[#6B7FA3] flex items-center gap-2 hover:text-[#F0F4FF] hover:border-white/10 transition-colors"
           >
             <Calendar size={16} /> Maintenance
           </a>
           <a
-            href="/vehicles"
-            className="pb-3 border-b-2 border-[#F5A623] text-[#F5A623] flex items-center gap-2 transition-colors"
+            href="/trips"
+            className="pb-3 border-b-2 border-transparent text-[#6B7FA3] flex items-center gap-2 hover:text-[#F0F4FF] hover:border-white/10 transition-colors"
           >
-            <SteeringWheel size={16} /> Vehicles
+            <ShieldCheck size={16} /> Trips
           </a>
         </div>
 

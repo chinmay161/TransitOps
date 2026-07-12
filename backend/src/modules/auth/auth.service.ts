@@ -97,12 +97,19 @@ export async function verifyEmail(token: string): Promise<void> {
   await repo.verifyUserEmail(user.id);
 }
 
-export async function getMe(userId: string): Promise<Omit<User, 'password_hash' | 'email_verification_token' | 'email_verification_expires_at'>> {
+export async function getMe(userId: string): Promise<any> {
   const user = await repo.findUserById(userId);
   if (!user) {
     throw new AppError(404, 'NOT_FOUND', 'User not found');
   }
-  return safeUser(user);
+  const result = safeUser(user) as any;
+  if (user.role === 'driver') {
+    const driverProfile = await repo.findDriverByUserId(userId);
+    if (driverProfile) {
+      result.driver_id = driverProfile.id;
+    }
+  }
+  return result;
 }
 
 // Admin creates account — user receives temp password, must change on first login
