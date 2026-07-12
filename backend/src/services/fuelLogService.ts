@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, PoolClient } from "pg";
 import { ApiError } from "../utils/api";
 import {
   FuelLogListParams,
@@ -157,7 +157,7 @@ export class FuelLogService {
   }
 
   private async validateRelations(
-    client: Pool,
+    client: Pool | PoolClient,
     payload: ReturnType<FuelLogService["mapPayload"]>,
     currentId?: string,
   ) {
@@ -330,145 +330,289 @@ export class FuelLogService {
 
   async createFuelLog(payload: FuelLogPayload) {
     const mapped = this.mapPayload(payload);
-    await this.validateRelations(this.pool, mapped);
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      await this.validateRelations(client, mapped);
 
-    const result = await this.pool.query<{ id: string }>(
-      `INSERT INTO fuel_logs (
-        vehicle_id,
-        driver_id,
-        trip_id,
-        fuel_station_name,
-        fuel_station_address,
-        city,
-        state,
-        latitude,
-        longitude,
-        fuel_type,
-        quantity,
-        unit,
-        price_per_unit,
-        total_cost,
-        currency,
-        odometer,
-        payment_method,
-        receipt_number,
-        receipt_image,
-        remarks,
-        filled_at,
-        liters,
-        cost_per_liter,
-        odometer_km,
-        notes
-      ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$11,$13,$16,$20
-      )
-      RETURNING id`,
-      [
-        mapped.vehicle_id,
-        mapped.driver_id,
-        mapped.trip_id,
-        mapped.fuel_station_name,
-        mapped.fuel_station_address,
-        mapped.city,
-        mapped.state,
-        mapped.latitude,
-        mapped.longitude,
-        mapped.fuel_type,
-        mapped.quantity,
-        mapped.unit,
-        mapped.price_per_unit,
-        mapped.total_cost,
-        mapped.currency,
-        mapped.odometer,
-        mapped.payment_method,
-        mapped.receipt_number,
-        mapped.receipt_image,
-        mapped.remarks,
-        mapped.filled_at,
-      ],
-    );
+      const result = await client.query<{ id: string }>(
+        `INSERT INTO fuel_logs (
+          vehicle_id,
+          driver_id,
+          trip_id,
+          fuel_station_name,
+          fuel_station_address,
+          city,
+          state,
+          latitude,
+          longitude,
+          fuel_type,
+          quantity,
+          unit,
+          price_per_unit,
+          total_cost,
+          currency,
+          odometer,
+          payment_method,
+          receipt_number,
+          receipt_image,
+          remarks,
+          filled_at,
+          liters,
+          cost_per_liter,
+          odometer_km,
+          notes
+        ) VALUES (
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$11,$13,$16,$20
+        )
+        RETURNING id`,
+        [
+          mapped.vehicle_id,
+          mapped.driver_id,
+          mapped.trip_id,
+          mapped.fuel_station_name,
+          mapped.fuel_station_address,
+          mapped.city,
+          mapped.state,
+          mapped.latitude,
+          mapped.longitude,
+          mapped.fuel_type,
+          mapped.quantity,
+          mapped.unit,
+          mapped.price_per_unit,
+          mapped.total_cost,
+          mapped.currency,
+          mapped.odometer,
+          mapped.payment_method,
+          mapped.receipt_number,
+          mapped.receipt_image,
+          mapped.remarks,
+          mapped.filled_at,
+        ],
+      );
 
-    await this.pool.query(
-      `UPDATE vehicles
-       SET current_odometer = GREATEST(current_odometer, $2),
-           updated_at = now()
-       WHERE id = $1`,
-      [mapped.vehicle_id, mapped.odometer],
-    );
+      const fuelLogId = result.rows[0].id;
 
-    return this.getFuelLogById(result.rows[0].id);
+      await client.query(
+        `UPDATE vehicles
+         SET current_odometer = GREATEST(current_odometer, $2),
+             updated_at = now()
+         WHERE id = $1`,
+        [mapped.vehicle_id, mapped.odometer],
+      );
+
+      if (mapped.total_cost > 0) {
+        const expenseDate = new Date(mapped.filled_at).toISOString().split('T')[0];
+        const expenseDesc = `Fuel purchase: ${mapped.quantity} ${mapped.unit} at ${mapped.fuel_station_name}`;
+        await client.query(
+          `INSERT INTO expenses (
+            vehicle_id,
+            driver_id,
+            trip_id,
+            category,
+            amount,
+            tax,
+            discount,
+            total_amount,
+            expense_date,
+            payment_method,
+            expense_status,
+            description,
+            vendor_name,
+            vendor,
+            receipt_number,
+            receipt_image,
+            remarks,
+            fuel_log_id
+          ) VALUES ($1, $2, $3, 'fuel', $4, 0, 0, $4, $5, $6, 'approved', $7, $8, $8, $9, $10, $11, $12)`,
+          [
+            mapped.vehicle_id,
+            mapped.driver_id,
+            mapped.trip_id,
+            mapped.total_cost,
+            expenseDate,
+            mapped.payment_method,
+            expenseDesc,
+            mapped.fuel_station_name,
+            mapped.receipt_number,
+            mapped.receipt_image,
+            mapped.remarks,
+            fuelLogId
+          ]
+        );
+      }
+
+      await client.query("COMMIT");
+      return this.getFuelLogById(fuelLogId);
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async updateFuelLog(id: string, payload: FuelLogPayload) {
     await this.getFuelLogById(id);
     const mapped = this.mapPayload(payload);
-    await this.validateRelations(this.pool, mapped, id);
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      await this.validateRelations(client, mapped, id);
 
-    await this.pool.query(
-      `UPDATE fuel_logs
-       SET
-         vehicle_id = $2,
-         driver_id = $3,
-         trip_id = $4,
-         fuel_station_name = $5,
-         fuel_station_address = $6,
-         city = $7,
-         state = $8,
-         latitude = $9,
-         longitude = $10,
-         fuel_type = $11,
-         quantity = $12,
-         unit = $13,
-         price_per_unit = $14,
-         total_cost = $15,
-         currency = $16,
-         odometer = $17,
-         payment_method = $18,
-         receipt_number = $19,
-         receipt_image = $20,
-         remarks = $21,
-         filled_at = $22,
-         liters = $12,
-         cost_per_liter = $14,
-         odometer_km = $17,
-         notes = $21,
-         updated_at = now()
-       WHERE id = $1`,
-      [
-        id,
-        mapped.vehicle_id,
-        mapped.driver_id,
-        mapped.trip_id,
-        mapped.fuel_station_name,
-        mapped.fuel_station_address,
-        mapped.city,
-        mapped.state,
-        mapped.latitude,
-        mapped.longitude,
-        mapped.fuel_type,
-        mapped.quantity,
-        mapped.unit,
-        mapped.price_per_unit,
-        mapped.total_cost,
-        mapped.currency,
-        mapped.odometer,
-        mapped.payment_method,
-        mapped.receipt_number,
-        mapped.receipt_image,
-        mapped.remarks,
-        mapped.filled_at,
-      ],
-    );
-
-    await this.pool.query(
-      `UPDATE vehicles
-       SET current_odometer = GREATEST(current_odometer, $2),
+      await client.query(
+        `UPDATE fuel_logs
+         SET
+           vehicle_id = $2,
+           driver_id = $3,
+           trip_id = $4,
+           fuel_station_name = $5,
+           fuel_station_address = $6,
+           city = $7,
+           state = $8,
+           latitude = $9,
+           longitude = $10,
+           fuel_type = $11,
+           quantity = $12,
+           unit = $13,
+           price_per_unit = $14,
+           total_cost = $15,
+           currency = $16,
+           odometer = $17,
+           payment_method = $18,
+           receipt_number = $19,
+           receipt_image = $20,
+           remarks = $21,
+           filled_at = $22,
+           liters = $12,
+           cost_per_liter = $14,
+           odometer_km = $17,
+           notes = $21,
            updated_at = now()
-       WHERE id = $1`,
-      [mapped.vehicle_id, mapped.odometer],
-    );
+         WHERE id = $1`,
+        [
+          id,
+          mapped.vehicle_id,
+          mapped.driver_id,
+          mapped.trip_id,
+          mapped.fuel_station_name,
+          mapped.fuel_station_address,
+          mapped.city,
+          mapped.state,
+          mapped.latitude,
+          mapped.longitude,
+          mapped.fuel_type,
+          mapped.quantity,
+          mapped.unit,
+          mapped.price_per_unit,
+          mapped.total_cost,
+          mapped.currency,
+          mapped.odometer,
+          mapped.payment_method,
+          mapped.receipt_number,
+          mapped.receipt_image,
+          mapped.remarks,
+          mapped.filled_at,
+        ],
+      );
 
-    return this.getFuelLogById(id);
+      await client.query(
+        `UPDATE vehicles
+         SET current_odometer = GREATEST(current_odometer, $2),
+             updated_at = now()
+         WHERE id = $1`,
+        [mapped.vehicle_id, mapped.odometer],
+      );
+
+      if (mapped.total_cost > 0) {
+        const expenseDate = new Date(mapped.filled_at).toISOString().split('T')[0];
+        const expenseDesc = `Fuel purchase: ${mapped.quantity} ${mapped.unit} at ${mapped.fuel_station_name}`;
+        
+        const existingExpense = await client.query('SELECT id FROM expenses WHERE fuel_log_id = $1', [id]);
+        if (existingExpense.rows.length > 0) {
+          await client.query(
+            `UPDATE expenses
+             SET
+               vehicle_id = $2,
+               driver_id = $3,
+               trip_id = $4,
+               amount = $5,
+               total_amount = $5,
+               expense_date = $6,
+               payment_method = $7,
+               description = $8,
+               vendor_name = $9,
+               vendor = $9,
+               receipt_number = $10,
+               receipt_image = $11,
+               remarks = $12,
+               updated_at = now()
+             WHERE fuel_log_id = $1`,
+            [
+              id,
+              mapped.vehicle_id,
+              mapped.driver_id,
+              mapped.trip_id,
+              mapped.total_cost,
+              expenseDate,
+              mapped.payment_method,
+              expenseDesc,
+              mapped.fuel_station_name,
+              mapped.receipt_number,
+              mapped.receipt_image,
+              mapped.remarks
+            ]
+          );
+        } else {
+          await client.query(
+            `INSERT INTO expenses (
+              vehicle_id,
+              driver_id,
+              trip_id,
+              category,
+              amount,
+              tax,
+              discount,
+              total_amount,
+              expense_date,
+              payment_method,
+              expense_status,
+              description,
+              vendor_name,
+              vendor,
+              receipt_number,
+              receipt_image,
+              remarks,
+              fuel_log_id
+            ) VALUES ($1, $2, $3, 'fuel', $4, 0, 0, $4, $5, $6, 'approved', $7, $8, $8, $9, $10, $11, $12)`,
+            [
+              mapped.vehicle_id,
+              mapped.driver_id,
+              mapped.trip_id,
+              mapped.total_cost,
+              expenseDate,
+              mapped.payment_method,
+              expenseDesc,
+              mapped.fuel_station_name,
+              mapped.receipt_number,
+              mapped.receipt_image,
+              mapped.remarks,
+              id
+            ]
+          );
+        }
+      } else {
+        await client.query('DELETE FROM expenses WHERE fuel_log_id = $1', [id]);
+      }
+
+      await client.query("COMMIT");
+      return this.getFuelLogById(id);
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async deleteFuelLog(id: string) {
