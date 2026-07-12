@@ -25,6 +25,9 @@ app.use((req, res, next) => {
 const fuelLogService = new FuelLogService(pool);
 const fuelLogController = new FuelLogController(fuelLogService);
 
+import { MockDigiLockerService } from "./services/digilocker/MockDigiLockerService";
+const mockDigiLockerService = new MockDigiLockerService(pool);
+
 // Helper for validating driver fields
 function validateDriver(data: any, isUpdate = false) {
   const errors: string[] = [];
@@ -150,7 +153,17 @@ app.get('/drivers', async (req: Request, res: Response) => {
       ORDER BY u.full_name ASC
     `;
     const result = await pool.query(query);
-    res.json(result.rows);
+    const drivers = result.rows.map(driver => {
+      const verification = mockDigiLockerService.getVerificationRecord(driver.id);
+      return {
+        ...driver,
+        verification_status: verification ? 'verified' : 'pending',
+        verification_source: verification ? verification.source : null,
+        verification_date: verification ? verification.verifiedAt : null,
+        verification_id: verification ? verification.verificationId : null,
+      };
+    });
+    res.json(drivers);
   } catch (error: any) {
     console.error('Error fetching drivers:', error);
     res.status(500).json({ error: 'Failed to fetch drivers', details: error.message });
@@ -187,7 +200,15 @@ app.get('/drivers/:id', async (req: Request, res: Response) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Driver not found' });
     }
-    res.json(result.rows[0]);
+    const driver = result.rows[0];
+    const verification = mockDigiLockerService.getVerificationRecord(driver.id);
+    res.json({
+      ...driver,
+      verification_status: verification ? 'verified' : 'pending',
+      verification_source: verification ? verification.source : null,
+      verification_date: verification ? verification.verifiedAt : null,
+      verification_id: verification ? verification.verificationId : null,
+    });
   } catch (error: any) {
     console.error('Error fetching driver:', error);
     res.status(500).json({ error: 'Failed to fetch driver', details: error.message });
@@ -846,6 +867,31 @@ app.delete('/maintenance/:id', async (req: Request, res: Response) => {
   } finally {
     client.release();
   }
+});
+
+// POST /api/verification/verify - Verify driver license with mock DigiLocker
+app.post('/api/verification/verify', async (req: Request, res: Response) => {
+  const { driver_id, license_number } = req.body;
+  if (!driver_id || !license_number) {
+    return res.status(400).json({ error: 'Driver ID and license number are required.' });
+  }
+  try {
+    const result = await mockDigiLockerService.verifyLicense(driver_id, license_number);
+    res.json({ success: true, message: 'Verification successful', data: result });
+  } catch (error: any) {
+    console.error('Verification failed:', error.message);
+    res.status(400).json({ error: error.message || 'Verification failed' });
+  }
+});
+
+// GET /api/verification/status/:driverId - Get verification status of a driver
+app.get('/api/verification/status/:driverId', (req: Request, res: Response) => {
+  const { driverId } = req.params;
+  const record = mockDigiLockerService.getVerificationRecord(driverId);
+  res.json({
+    verified: !!record,
+    verification: record
+  });
 });
 
 app.use("/api/fuel-logs", createFuelLogRouter(fuelLogController));
