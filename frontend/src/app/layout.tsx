@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
-<<<<<<< HEAD
-=======
-import { Geist, Geist_Mono } from "next/font/google";
-import { AuthProvider } from "@/context/auth-context";
->>>>>>> 880f3f6 (feat(auth): implement authentication module and login flow)
 import "./globals.css";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider as MockAuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "@/context/auth-context";
 
 export const metadata: Metadata = {
   title: "TransitOps — Smart Transport Operations Platform",
@@ -24,7 +20,6 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-<<<<<<< HEAD
     <html lang="en" style={{ colorScheme: "dark" }}>
       <body
         style={{
@@ -32,12 +27,10 @@ export default function RootLayout({
           background: "#070D1A",
         }}
       >
-=======
-    <html lang="en" className={`${geist.variable} ${geistMono.variable}`} style={{ colorScheme: "dark" }}>
-      <body style={{ fontFamily: "var(--font-geist), 'Inter', system-ui, sans-serif", background: "#070D1A" }}>
->>>>>>> 880f3f6 (feat(auth): implement authentication module and login flow)
         <AuthProvider>
-          {children}
+          <MockAuthProvider>
+            {children}
+          </MockAuthProvider>
         </AuthProvider>
       </body>
     </html>

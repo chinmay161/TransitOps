@@ -1,5 +1,5 @@
-<<<<<<< HEAD
 import express, { NextFunction, Request, Response } from "express";
+import cookieParser from "cookie-parser";
 import { env } from "./config/env";
 import { FuelLogController } from "./controllers/fuelLogController";
 import { ensureFuelLogSchema } from "./db/ensureFuelLogSchema";
@@ -7,10 +7,13 @@ import { pool } from "./db/pool";
 import { createFuelLogRouter } from "./routes/fuelLogRoutes";
 import { FuelLogService } from "./services/fuelLogService";
 import { ApiError, sendError } from "./utils/api";
+import { authRouter } from "./modules/auth/index";
+import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
 
 app.use(express.json({ limit: "10mb" }));
+app.use(cookieParser());
 
 // Add CORS middleware
 app.use((req, res, next) => {
@@ -1449,15 +1452,18 @@ app.delete('/trips/:id', async (req: Request, res: Response) => {
 });
 
 app.use("/api/fuel-logs", createFuelLogRouter(fuelLogController));
+app.use("/api/auth", authRouter);
 
-app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
+app.get("/api/health", (_req: Request, res: Response) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   if (error instanceof ApiError) {
     sendError(res, error.statusCode, error.message);
     return;
   }
-
-  console.error(error);
-  sendError(res, 500, "Internal server error.");
+  errorHandler(error, req, res, next);
 });
 
 async function startServer() {
@@ -1473,31 +1479,5 @@ void startServer().catch((error) => {
   console.error("Failed to start server", error);
   process.exit(1);
 });
-=======
-import 'dotenv/config';
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import { env } from './config/env.js';
-import { authRouter } from './modules/auth/index.js';
-import { errorHandler } from './middleware/errorHandler.js';
-
-const app = express();
-const PORT = env.PORT;
-
-app.use(express.json());
-app.use(cookieParser());
-
-app.use('/api/auth', authRouter);
-
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-app.use(errorHandler);
-
-app.listen(PORT, () => {
-  console.log(`TransitOps API running on http://localhost:${PORT}`);
-});
 
 export default app;
->>>>>>> 880f3f6 (feat(auth): implement authentication module and login flow)

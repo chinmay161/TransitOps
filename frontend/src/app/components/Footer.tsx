@@ -3,7 +3,6 @@
 import React from "react";
 import { GithubLogo, BookOpen, ShieldCheck, Lifebuoy, InstagramLogo, TwitterLogo, YoutubeLogo } from "@phosphor-icons/react";
 
-<<<<<<< HEAD
 interface FooterLink {
   label: string;
   href: string;
@@ -16,11 +15,6 @@ interface FooterCol {
 }
 
 const cols: FooterCol[] = [
-=======
-type FooterLink = { label: string; href: string; icon?: React.ReactNode };
-
-const cols: { heading: string; links: FooterLink[] }[] = [
->>>>>>> 880f3f6 (feat(auth): implement authentication module and login flow)
   {
     heading: "Platform",
     links: [
