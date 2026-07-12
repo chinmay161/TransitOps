@@ -57,10 +57,10 @@ export function proxy(request: NextRequest) {
   const role = decoded.role;
 
   if (role === "driver") {
-    const allowed = ["/drivers", "/fuel-log", "/expenses", "/notifications"];
+    const allowed = ["/dashboard", "/fuel-log", "/expenses", "/notifications"];
     const isAllowed = allowed.some((path) => pathname === path || pathname.startsWith(path + "/"));
     if (!isAllowed) {
-      return NextResponse.redirect(new URL("/drivers", request.url));
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   } else if (role === "dispatcher") {
     const allowed = ["/drivers", "/trips", "/notifications"];
