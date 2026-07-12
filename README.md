@@ -6,10 +6,9 @@ The goal is simple: replace scattered spreadsheets and manual coordination with 
 
 ## Team Members
 
-- Aman
-- Add team member name
-- Add team member name
-- Add team member name
+- Chinmay Wankhede
+- Shivam Mishra
+- Yash Singh
 
 ## What It Does
 
