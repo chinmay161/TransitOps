@@ -104,7 +104,7 @@ export default function DriverManagementPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/drivers`);
+      const response = await fetch(`${API_URL}/drivers`, { credentials: "include" });
       if (!response.ok) {
         throw new Error("Failed to load drivers from server.");
       }
@@ -169,6 +169,7 @@ export default function DriverManagementPage() {
       const response = await fetch(`${API_URL}/drivers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(formData)
       });
       
@@ -194,6 +195,7 @@ export default function DriverManagementPage() {
       const response = await fetch(`${API_URL}/drivers/${selectedDriver.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(formData)
       });
       
@@ -218,7 +220,8 @@ export default function DriverManagementPage() {
     if (!selectedDriver) return;
     try {
       const response = await fetch(`${API_URL}/drivers/${selectedDriver.id}`, {
-        method: "DELETE"
+        method: "DELETE",
+        credentials: "include"
       });
       
       const resData = await response.json();

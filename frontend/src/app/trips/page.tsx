@@ -131,9 +131,9 @@ export default function TripManagementPage() {
     setError(null);
     try {
       const [tRes, dRes, vRes] = await Promise.all([
-        fetch(`${API_URL}/trips`),
-        fetch(`${API_URL}/drivers`),
-        fetch(`${API_URL}/vehicles`)
+        fetch(`${API_URL}/trips`, { credentials: "include" }),
+        fetch(`${API_URL}/drivers`, { credentials: "include" }),
+        fetch(`${API_URL}/vehicles`, { credentials: "include" })
       ]);
 
       if (!tRes.ok) throw new Error("Failed to load trips.");
@@ -245,6 +245,7 @@ export default function TripManagementPage() {
       const response = await fetch(`${API_URL}/trips`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           ...formData,
           estimated_distance_km: formData.estimated_distance_km ? Number(formData.estimated_distance_km) : null,
@@ -274,6 +275,7 @@ export default function TripManagementPage() {
       const response = await fetch(`${API_URL}/trips/${selectedTrip.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           ...formData,
           estimated_distance_km: formData.estimated_distance_km ? Number(formData.estimated_distance_km) : null,
@@ -301,7 +303,8 @@ export default function TripManagementPage() {
   const handleStartTrip = async (tripId: string) => {
     try {
       const res = await fetch(`${API_URL}/trips/${tripId}/start`, {
-        method: "PATCH"
+        method: "PATCH",
+        credentials: "include"
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to start trip.");
@@ -320,6 +323,7 @@ export default function TripManagementPage() {
       const res = await fetch(`${API_URL}/trips/${selectedTrip.id}/complete`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           final_odometer: formData.final_odometer ? Number(formData.final_odometer) : null
         })
@@ -341,7 +345,8 @@ export default function TripManagementPage() {
   const handleCancelTrip = async (tripId: string) => {
     try {
       const res = await fetch(`${API_URL}/trips/${tripId}/cancel`, {
-        method: "PATCH"
+        method: "PATCH",
+        credentials: "include"
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to cancel trip.");
@@ -358,7 +363,8 @@ export default function TripManagementPage() {
     if (!selectedTrip) return;
     try {
       const res = await fetch(`${API_URL}/trips/${selectedTrip.id}`, {
-        method: "DELETE"
+        method: "DELETE",
+        credentials: "include"
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to delete trip.");

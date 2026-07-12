@@ -117,19 +117,19 @@ export default function MaintenanceManagementPage() {
     setError(null);
     try {
       // 1. Load maintenance records
-      const mRes = await fetch(`${API_URL}/maintenance`);
+      const mRes = await fetch(`${API_URL}/maintenance`, { credentials: "include" });
       if (!mRes.ok) throw new Error("Failed to load maintenance records.");
       const mData = await mRes.json();
       setRecords(mData);
 
       // 2. Load all vehicles (for statistics and vehicle listing)
-      const vRes = await fetch(`${API_URL}/vehicles`);
+      const vRes = await fetch(`${API_URL}/vehicles`, { credentials: "include" });
       if (!vRes.ok) throw new Error("Failed to load vehicles.");
       const vData = await vRes.json();
       setVehicles(vData);
 
       // 3. Load selectable vehicles (for schedule dropdown)
-      const selectRes = await fetch(`${API_URL}/vehicles?selectable=true`);
+      const selectRes = await fetch(`${API_URL}/vehicles?selectable=true`, { credentials: "include" });
       if (!selectRes.ok) throw new Error("Failed to load selectable vehicles.");
       const selectData = await selectRes.json();
       setSelectableVehicles(selectData);
@@ -184,6 +184,7 @@ export default function MaintenanceManagementPage() {
       const response = await fetch(`${API_URL}/maintenance`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           ...formData,
           cost: formData.cost ? Number(formData.cost) : null
@@ -212,6 +213,7 @@ export default function MaintenanceManagementPage() {
       const response = await fetch(`${API_URL}/maintenance/${selectedRecord.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           ...formData,
           cost: formData.cost ? Number(formData.cost) : null
@@ -241,6 +243,7 @@ export default function MaintenanceManagementPage() {
       const response = await fetch(`${API_URL}/maintenance/${selectedRecord.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           status: "completed",
           completed_date: formData.completed_date || new Date().toISOString().split("T")[0],
@@ -270,7 +273,8 @@ export default function MaintenanceManagementPage() {
     if (!selectedRecord) return;
     try {
       const response = await fetch(`${API_URL}/maintenance/${selectedRecord.id}`, {
-        method: "DELETE"
+        method: "DELETE",
+        credentials: "include"
       });
 
       const resData = await response.json();
