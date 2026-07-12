@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export class AuthApiError extends Error {
   constructor(
@@ -17,11 +17,22 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${BASE_URL}${endpoint}`;
-  const res = await fetch(url, {
-    credentials: "include",
-    headers: { "Content-Type": "application/json", ...options.headers },
-    ...options,
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      credentials: "include",
+      headers: { "Content-Type": "application/json", ...options.headers },
+      ...options,
+    });
+  } catch (err) {
+    const message =
+      err instanceof TypeError
+        ? `Unable to connect to server at ${BASE_URL}. Is the backend running?`
+        : err instanceof Error
+          ? err.message
+          : "An unexpected network error occurred";
+    throw new AuthApiError(0, "NETWORK_ERROR", message);
+  }
 
   const body = await res.json().catch(() => ({}));
 

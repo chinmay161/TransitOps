@@ -8,7 +8,7 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
 
   if (token && pathname === "/login") {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/drivers", request.url));
   }
 
   return NextResponse.next();
