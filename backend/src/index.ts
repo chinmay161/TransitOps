@@ -1,11 +1,6 @@
-<<<<<<< HEAD
-import express, { NextFunction, Request, Response } from "express";
-import cookieParser from "cookie-parser";
-=======
 import 'dotenv/config';
 import express, { NextFunction, Request, Response } from "express";
-import cookieParser from 'cookie-parser';
->>>>>>> 1d760bc (chore: resolve merge conflicts and finalize vehicle module)
+import cookieParser from "cookie-parser";
 import { env } from "./config/env";
 import { FuelLogController } from "./controllers/fuelLogController";
 import { ensureFuelLogSchema } from "./db/ensureFuelLogSchema";
@@ -13,13 +8,8 @@ import { pool } from "./db/pool";
 import { createFuelLogRouter } from "./routes/fuelLogRoutes";
 import { FuelLogService } from "./services/fuelLogService";
 import { ApiError, sendError } from "./utils/api";
-<<<<<<< HEAD
-import { authRouter } from "./modules/auth/index";
-import { errorHandler } from "./middleware/errorHandler";
-=======
-import { authRouter } from './modules/auth/index.js';
-import { errorHandler } from './middleware/errorHandler.js';
->>>>>>> 1d760bc (chore: resolve merge conflicts and finalize vehicle module)
+import { authRouter } from "./modules/auth/index.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 
@@ -1465,38 +1455,17 @@ app.delete('/trips/:id', async (req: Request, res: Response) => {
 app.use("/api/fuel-logs", createFuelLogRouter(fuelLogController));
 app.use("/api/auth", authRouter);
 
-<<<<<<< HEAD
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-  if (error instanceof ApiError) {
-    sendError(res, error.statusCode, error.message);
-    return;
-  }
-  errorHandler(error, req, res, next);
-});
-=======
-app.use('/api/auth', authRouter);
-
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 app.use(errorHandler);
->>>>>>> 1d760bc (chore: resolve merge conflicts and finalize vehicle module)
 
 async function startServer() {
   await ensureFuelLogSchema(pool);
 
-<<<<<<< HEAD
-  app.listen(env.port, () => {
-    console.log(`Server is running on port ${env.port}`);
-=======
   app.listen(env.PORT, () => {
     console.log(`Server is running on port ${env.PORT}`);
->>>>>>> 1d760bc (chore: resolve merge conflicts and finalize vehicle module)
     seedVehicles();
   });
 }
@@ -1506,7 +1475,4 @@ void startServer().catch((error) => {
   process.exit(1);
 });
 
-<<<<<<< HEAD
 export default app;
-=======
->>>>>>> 1d760bc (chore: resolve merge conflicts and finalize vehicle module)
