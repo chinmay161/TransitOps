@@ -2,9 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
+import { useAuth } from "@/context/auth-context";
+import { useRouter } from "next/navigation";
+import { resolveDashboardRoute } from "@/utils/resolve-dashboard-route";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const { authenticated, user, logout } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 24);
@@ -12,6 +17,11 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/");
+  };
 
   return (
     <motion.header
@@ -47,6 +57,7 @@ export default function Navbar() {
           alignItems: "center",
           justifyContent: "space-between",
           gap: "24px",
+          height: "100%",
         }}
       >
         {/* Logo */}
@@ -86,44 +97,103 @@ export default function Navbar() {
           </span>
         </a>
 
-        {/* Login Button */}
-        <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
-          <a
-            href="/login"
-            id="nav-login"
-            style={{
-              padding: "8px 20px",
-              borderRadius: "8px",
-              fontSize: "0.875rem",
-              fontWeight: 600,
-              color: "#F5A623",
-              border: "1.5px solid rgba(245, 166, 35, 0.4)",
-              background: "rgba(245, 166, 35, 0.04)",
-              textDecoration: "none",
-              transition: "all 200ms cubic-bezier(0.23, 1, 0.32, 1)",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLAnchorElement;
-              el.style.color = "#050A14";
-              el.style.background = "#F5A623";
-              el.style.borderColor = "#F5A623";
-              el.style.transform = "translateY(-1px)";
-              el.style.boxShadow = "0 4px 12px rgba(245, 166, 35, 0.2)";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLAnchorElement;
-              el.style.color = "#F5A623";
-              el.style.background = "rgba(245, 166, 35, 0.04)";
-              el.style.borderColor = "rgba(245, 166, 35, 0.4)";
-              el.style.transform = "none";
-              el.style.boxShadow = "none";
-            }}
-          >
-            Login
-          </a>
+        {/* Auth Buttons */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", flexShrink: 0 }}>
+          {authenticated ? (
+            <>
+              <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 500, display: "none" }}>
+                Signed in as <strong style={{ color: "var(--text-primary)" }}>{user?.full_name}</strong>
+              </span>
+              <a
+                href={resolveDashboardRoute(user?.role || "")}
+                style={{
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  color: "#F0F4FF",
+                  textDecoration: "none",
+                  transition: "color 150ms ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "var(--amber)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "#F0F4FF";
+                }}
+              >
+                Go to Dashboard
+              </a>
+              <button
+                onClick={handleLogout}
+                style={{
+                  padding: "8px 20px",
+                  borderRadius: "8px",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  color: "#EF4444",
+                  border: "1.5px solid rgba(239, 68, 68, 0.4)",
+                  background: "rgba(239, 68, 68, 0.04)",
+                  cursor: "pointer",
+                  transition: "all 200ms cubic-bezier(0.23, 1, 0.32, 1)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget as HTMLButtonElement;
+                  el.style.color = "#050A14";
+                  el.style.background = "#EF4444";
+                  el.style.borderColor = "#EF4444";
+                  el.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.2)";
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget as HTMLButtonElement;
+                  el.style.color = "#EF4444";
+                  el.style.background = "rgba(239, 68, 68, 0.04)";
+                  el.style.borderColor = "rgba(239, 68, 68, 0.4)";
+                  el.style.boxShadow = "none";
+                }}
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <a
+              href="/login"
+              id="nav-login"
+              style={{
+                padding: "8px 20px",
+                borderRadius: "8px",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                color: "#F5A623",
+                border: "1.5px solid rgba(245, 166, 35, 0.4)",
+                background: "rgba(245, 166, 35, 0.04)",
+                textDecoration: "none",
+                transition: "all 200ms cubic-bezier(0.23, 1, 0.32, 1)",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.color = "#050A14";
+                el.style.background = "#F5A623";
+                el.style.borderColor = "#F5A623";
+                el.style.transform = "translateY(-1px)";
+                el.style.boxShadow = "0 4px 12px rgba(245, 166, 35, 0.2)";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.color = "#F5A623";
+                el.style.background = "rgba(245, 166, 35, 0.04)";
+                el.style.borderColor = "rgba(245, 166, 35, 0.4)";
+                el.style.transform = "none";
+                el.style.boxShadow = "none";
+              }}
+            >
+              Login
+            </a>
+          )}
         </div>
       </div>
     </motion.header>
