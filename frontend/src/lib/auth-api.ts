@@ -88,6 +88,7 @@ export async function registerDispatcher(
   });
 }
 
+// MOCK EMAIL VERIFICATION (Hackathon Demo)
 export async function devVerifyEmail(email: string): Promise<unknown> {
   return request("/api/auth/dev/verify-email", {
     method: "POST",

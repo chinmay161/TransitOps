@@ -14,7 +14,7 @@ router.get('/me', authenticate, authController.getMe);
 router.post('/register/driver', authController.registerDriver);
 router.post('/register/dispatcher', authController.registerDispatcher);
 
-// Development-only verification simulator
+// MOCK EMAIL VERIFICATION (Hackathon Demo)
 router.post('/dev/verify-email', authController.devVerifyEmail);
 
 // Admin-only: create Fleet Manager accounts

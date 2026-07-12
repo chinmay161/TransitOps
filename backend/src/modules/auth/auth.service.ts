@@ -243,11 +243,8 @@ export async function registerDriver(
   return { user: safeUser(user) };
 }
 
+// MOCK EMAIL VERIFICATION (Hackathon Demo)
 export async function devVerifyEmail(email: string): Promise<void> {
-  if (process.env.NODE_ENV !== 'development') {
-    throw new AppError(403, 'FORBIDDEN', 'This endpoint is only available in development mode');
-  }
-
   const user = await repo.findUserByEmail(email);
   if (!user) {
     throw new AppError(404, 'NOT_FOUND', 'User not found');

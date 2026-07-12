@@ -5,6 +5,7 @@ import { ReactNode } from "react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import { useAuth } from "@/context/auth-context";
+import { resolveDashboardRoute } from "@/utils/resolve-dashboard-route";
 
 export function ModuleShell({
   title,
@@ -17,9 +18,11 @@ export function ModuleShell({
 }) {
   const { role } = useAuth();
 
+  const dashboardSlug = role ? resolveDashboardRoute(role).substring(1) : "login";
+
   // Filter tabs based on role permissions
   const allTabs = [
-    { slug: "dashboard", label: "dashboard" },
+    { slug: dashboardSlug, label: "dashboard" },
     { slug: "expenses", label: "expenses" },
     { slug: "reports", label: "reports" },
     { slug: "notifications", label: "notifications" },
@@ -29,17 +32,21 @@ export function ModuleShell({
 
   const allowedTabs = allTabs.filter((tab) => {
     if (role === "driver") {
-      return ["dashboard", "expenses", "notifications"].includes(tab.slug);
+      return [dashboardSlug, "expenses", "notifications"].includes(tab.slug);
     }
     if (role === "dispatcher") {
-      return ["dashboard", "notifications"].includes(tab.slug);
+      return [dashboardSlug, "notifications"].includes(tab.slug);
     }
     if (role === "fleet_manager") {
-      return ["dashboard", "expenses", "reports", "notifications", "users"].includes(tab.slug);
+      return [dashboardSlug, "expenses", "reports", "notifications", "users"].includes(tab.slug);
     }
     // admin sees all
     return true;
   });
+
+  const uniqueAllowedTabs = allowedTabs.filter(
+    (tab, index, self) => self.findIndex((t) => t.slug === tab.slug) === index
+  );
 
   return (
     <>
@@ -49,7 +56,7 @@ export function ModuleShell({
           <section className="rounded-[28px] border border-white/8 bg-[#0D1526] p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-wrap gap-3">
-                {allowedTabs.map((tab) => (
+                {uniqueAllowedTabs.map((tab) => (
                   <Link
                     key={tab.slug}
                     href={`/${tab.slug}`}

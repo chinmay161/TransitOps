@@ -130,18 +130,15 @@ export async function registerDispatcher(req: AuthRequest, res: Response, next: 
   }
 }
 
-// Development-only email verification simulator
+// MOCK EMAIL VERIFICATION (Hackathon Demo)
 export async function devVerifyEmail(req: Request, res: Response, next: NextFunction) {
   try {
-    if (process.env.NODE_ENV !== 'development') {
-      throw new AppError(403, 'FORBIDDEN', 'This endpoint is only available in development mode');
-    }
     const { email } = req.body;
     if (!email) {
       throw new AppError(400, 'BAD_REQUEST', 'Email is required');
     }
     await authService.devVerifyEmail(email);
-    return sendSuccess(res, { message: 'Email verified (Development Mode)' }, 200);
+    return sendSuccess(res, { message: 'Email verified successfully.' }, 200);
   } catch (err) {
     next(err);
   }

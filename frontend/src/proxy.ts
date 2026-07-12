@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { resolveDashboardRoute } from "./utils/resolve-dashboard-route";
 
 const authPaths = ["/login", "/register", "/verify-email", "/change-password"];
 
@@ -32,10 +33,8 @@ export function proxy(request: NextRequest) {
   if (isAuthPage) {
     if (token) {
       const decoded = decodeJwt(token);
-      if (decoded && decoded.role === "driver") {
-        return NextResponse.redirect(new URL("/drivers", request.url));
-      }
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      const target = resolveDashboardRoute(decoded?.role || "");
+      return NextResponse.redirect(new URL(target, request.url));
     }
     return NextResponse.next();
   }
@@ -57,21 +56,21 @@ export function proxy(request: NextRequest) {
   const role = decoded.role;
 
   if (role === "driver") {
-    const allowed = ["/dashboard", "/fuel-log", "/expenses", "/notifications"];
+    const allowed = ["/drivers", "/fuel-log", "/expenses", "/notifications"];
     const isAllowed = allowed.some((path) => pathname === path || pathname.startsWith(path + "/"));
     if (!isAllowed) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL("/drivers", request.url));
     }
   } else if (role === "dispatcher") {
-    const allowed = ["/dashboard", "/trips", "/notifications"];
+    const allowed = ["/drivers", "/trips", "/notifications"];
     const isAllowed = allowed.some((path) => pathname === path || pathname.startsWith(path + "/"));
     if (!isAllowed) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL("/drivers", request.url));
     }
   } else if (role === "fleet_manager") {
     // Fleet managers can access everything except admin settings
     if (pathname === "/admin-settings" || pathname.startsWith("/admin-settings/")) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL("/vehicles", request.url));
     }
   } else if (role === "admin") {
     // Admins have full access

@@ -64,12 +64,15 @@ export function RegisterForm() {
     }
     setVerifying(true);
     try {
+      // MOCK EMAIL VERIFICATION (Hackathon Demo)
       await devVerifyEmail(registeredEmail);
-      toast.success("Email verified (Development Mode)");
-      router.push("/login");
+      toast.success("Email verified successfully.");
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
     } catch (err) {
       const apiErr = err as AuthApiError;
-      toast.error(apiErr?.message || "Simulation failed");
+      toast.error(apiErr?.message || "Verification failed");
     } finally {
       setVerifying(false);
     }
@@ -113,53 +116,29 @@ export function RegisterForm() {
           We&apos;ve sent a verification email to your inbox. Please verify your email before signing in.
         </p>
 
-        {process.env.NODE_ENV === "development" ? (
-          <div className="flex flex-col items-center gap-3 w-full max-w-xs mt-2 bg-slate-50/80 border border-slate-100 rounded-2xl p-4 dark:bg-slate-900/40 dark:border-slate-800/60">
-            <div className="flex flex-col items-center gap-1">
-              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/30 dark:bg-amber-950/20 dark:text-amber-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                Development Mode
-              </span>
-              <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-                Email verification is simulated locally.
-              </span>
-            </div>
-            
-            <button
-              type="button"
-              onClick={handleSimulateVerify}
-              disabled={verifying}
-              className="w-full rounded-xl py-2.5 px-4 text-xs font-semibold shadow-sm hover:opacity-90 active:scale-[0.98] transition-all duration-200 cursor-pointer"
-              style={{
-                background: "var(--amber)",
-                color: "#fff",
-              }}
-            >
-              {verifying ? "Verifying..." : "✓ Simulate Email Verified"}
-            </button>
+        <div className="flex flex-col items-center gap-3 w-full max-w-xs mt-2 bg-slate-50/80 border border-slate-100 rounded-2xl p-4 dark:bg-slate-900/40 dark:border-slate-800/60">
+          <button
+            type="button"
+            onClick={handleSimulateVerify}
+            disabled={verifying}
+            className="w-full rounded-xl py-2.5 px-4 text-xs font-semibold shadow-sm hover:opacity-90 active:scale-[0.98] transition-all duration-200 cursor-pointer"
+            style={{
+              background: "var(--amber)",
+              color: "#fff",
+            }}
+          >
+            {verifying ? "Verifying..." : "Verify Email"}
+          </button>
 
-            <button
-              type="button"
-              className="text-xs hover:underline mt-1 cursor-pointer"
-              style={{ color: "var(--text-muted)" }}
-              onClick={() => toast.info("Resend feature coming soon. Contact your fleet manager for assistance.")}
-            >
-              Resend Verification Email
-            </button>
-          </div>
-        ) : (
-          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-            Didn&apos;t receive it?{" "}
-            <button
-              type="button"
-              className="hover:underline"
-              style={{ color: "var(--amber)" }}
-              onClick={() => toast.info("Resend feature coming soon. Contact your fleet manager for assistance.")}
-            >
-              Resend Verification Email
-            </button>
-          </p>
-        )}
+          <button
+            type="button"
+            className="text-xs hover:underline mt-1 cursor-pointer"
+            style={{ color: "var(--text-muted)" }}
+            onClick={() => toast.info("Resend feature coming soon. Contact your fleet manager for assistance.")}
+          >
+            Resend Verification Email
+          </button>
+        </div>
 
         <Link
           href="/login"
