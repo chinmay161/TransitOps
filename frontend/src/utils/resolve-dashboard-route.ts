@@ -1,7 +1,7 @@
 export type UserRole = "admin" | "fleet_manager" | "dispatcher" | "driver";
 
 const roleRoutes: Record<UserRole, string> = {
-  driver: "/",
+  driver: "/drivers",
   admin: "/",
   fleet_manager: "/",
   dispatcher: "/",
