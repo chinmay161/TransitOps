@@ -137,4 +137,12 @@ export async function findDriverByUserId(userId: string): Promise<{ id: string }
   return result.rows[0] || null;
 }
 
+export async function deleteUserById(userId: string): Promise<void> {
+  await pool.query(
+    'DELETE FROM users WHERE id = $1',
+    [userId]
+  );
+}
+
+
 

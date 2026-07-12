@@ -154,11 +154,21 @@ export async function createFleetManager(
     createdById,
   });
 
-  await sendVerificationEmail({
-    to: user.email,
-    fullName: user.full_name,
-    token: rawVerificationToken,
-  });
+  try {
+    await sendVerificationEmail({
+      to: user.email,
+      fullName: user.full_name,
+      token: rawVerificationToken,
+    });
+  } catch (err) {
+    console.error('Failed to send verification email, rolling back fleet manager insertion:', err);
+    try {
+      await repo.deleteUserById(user.id);
+    } catch (dbErr) {
+      console.error('Failed to rollback user insertion:', dbErr);
+    }
+    throw err;
+  }
 
   return { user: safeUser(user) };
 }
@@ -205,11 +215,21 @@ export async function registerDispatcher(
     role: 'dispatcher',
   });
 
-  await sendVerificationEmail({
-    to: user.email,
-    fullName: user.full_name,
-    token: rawVerificationToken,
-  });
+  try {
+    await sendVerificationEmail({
+      to: user.email,
+      fullName: user.full_name,
+      token: rawVerificationToken,
+    });
+  } catch (err) {
+    console.error('Failed to send verification email, rolling back dispatcher insertion:', err);
+    try {
+      await repo.deleteUserById(user.id);
+    } catch (dbErr) {
+      console.error('Failed to rollback user insertion:', dbErr);
+    }
+    throw err;
+  }
 
   return { user: safeUser(user) };
 }
@@ -234,11 +254,21 @@ export async function registerDriver(
     hireDate,
   });
 
-  await sendVerificationEmail({
-    to: user.email,
-    fullName: user.full_name,
-    token: rawVerificationToken,
-  });
+  try {
+    await sendVerificationEmail({
+      to: user.email,
+      fullName: user.full_name,
+      token: rawVerificationToken,
+    });
+  } catch (err) {
+    console.error('Failed to send verification email, rolling back driver insertion:', err);
+    try {
+      await repo.deleteUserById(user.id);
+    } catch (dbErr) {
+      console.error('Failed to rollback user insertion:', dbErr);
+    }
+    throw err;
+  }
 
   return { user: safeUser(user) };
 }

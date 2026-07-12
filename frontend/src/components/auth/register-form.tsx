@@ -11,7 +11,7 @@ import { UserPlus } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/auth/password-input";
-import { registerDriver, registerDispatcher, devVerifyEmail } from "@/lib/auth-api";
+import { registerDriver, registerDispatcher } from "@/lib/auth-api";
 import type { AuthApiError } from "@/lib/auth-api";
 
 const roles = ["driver", "dispatcher"] as const;
@@ -44,7 +44,6 @@ export function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
-  const [verifying, setVerifying] = useState(false);
 
   const {
     register,
@@ -56,27 +55,6 @@ export function RegisterForm() {
   });
 
   const password = watch("password", "");
-
-  async function handleSimulateVerify() {
-    if (!registeredEmail) {
-      toast.error("No registered email found.");
-      return;
-    }
-    setVerifying(true);
-    try {
-      // MOCK EMAIL VERIFICATION (Hackathon Demo)
-      await devVerifyEmail(registeredEmail);
-      toast.success("Email verified successfully.");
-      setTimeout(() => {
-        router.push("/login");
-      }, 1500);
-    } catch (err) {
-      const apiErr = err as AuthApiError;
-      toast.error(apiErr?.message || "Verification failed");
-    } finally {
-      setVerifying(false);
-    }
-  }
 
   async function onSubmit(data: RegisterFormData) {
     setLoading(true);
@@ -116,29 +94,17 @@ export function RegisterForm() {
           We&apos;ve sent a verification email to your inbox. Please verify your email before signing in.
         </p>
 
-        <div className="flex flex-col items-center gap-3 w-full max-w-xs mt-2 bg-slate-50/80 border border-slate-100 rounded-2xl p-4 dark:bg-slate-900/40 dark:border-slate-800/60">
+        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+          Didn&apos;t receive it?{" "}
           <button
             type="button"
-            onClick={handleSimulateVerify}
-            disabled={verifying}
-            className="w-full rounded-xl py-2.5 px-4 text-xs font-semibold shadow-sm hover:opacity-90 active:scale-[0.98] transition-all duration-200 cursor-pointer"
-            style={{
-              background: "var(--amber)",
-              color: "#fff",
-            }}
-          >
-            {verifying ? "Verifying..." : "Verify Email"}
-          </button>
-
-          <button
-            type="button"
-            className="text-xs hover:underline mt-1 cursor-pointer"
-            style={{ color: "var(--text-muted)" }}
+            className="hover:underline cursor-pointer"
+            style={{ color: "var(--amber)" }}
             onClick={() => toast.info("Resend feature coming soon. Contact your fleet manager for assistance.")}
           >
             Resend Verification Email
           </button>
-        </div>
+        </p>
 
         <Link
           href="/login"

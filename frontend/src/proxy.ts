@@ -24,6 +24,7 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("access_token")?.value;
 
+  // Allow public landing page
   if (pathname === "/") {
     return NextResponse.next();
   }
