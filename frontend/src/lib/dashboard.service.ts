@@ -31,6 +31,7 @@ async function request<T>(path: string, filters: DashboardFilters = {}) {
     const query = toQueryString(filters);
     const response = await fetch(`${API_BASE_URL}${path}${query ? `?${query}` : ""}`, {
       cache: "no-store",
+      credentials: "include",
     });
     const payload = (await response.json()) as DashboardResponse<T>;
     if (!response.ok || !payload.success) {
