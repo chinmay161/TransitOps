@@ -311,6 +311,12 @@ export default function DriverManagementPage() {
           >
             <Calendar size={16} /> Maintenance
           </a>
+          <a
+            href="/trips"
+            className="pb-3 border-b-2 border-transparent text-[#6B7FA3] flex items-center gap-2 hover:text-[#F0F4FF] hover:border-white/10 transition-colors"
+          >
+            <ShieldCheck size={16} /> Trips
+          </a>
         </div>
         
         {/* Page Title Header */}
