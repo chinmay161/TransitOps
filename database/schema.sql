@@ -48,7 +48,8 @@ CREATE TYPE fuel_type AS ENUM (
     'petrol',
     'diesel',
     'cng',
-    'electric'
+    'electric',
+    'other'
 );
 
 CREATE TYPE notification_status AS ENUM (
@@ -256,22 +257,41 @@ CREATE INDEX idx_maintenance_upcoming ON maintenance_records (vehicle_id, schedu
 -- FUEL LOGS
 -- =====================================================
 CREATE TABLE fuel_logs (
-    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    vehicle_id      UUID            NOT NULL,
-    trip_id         UUID,
-    filled_at       TIMESTAMPTZ     NOT NULL DEFAULT now(),
-    liters          NUMERIC(10,2)   NOT NULL,
-    cost_per_liter  NUMERIC(8,2)    NOT NULL,
-    total_cost      NUMERIC(12,2)   NOT NULL,
-    odometer_km     NUMERIC(10,2)   NOT NULL,
-    notes           TEXT,
-    created_by      UUID,
-    updated_by      UUID,
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    id                      UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    vehicle_id              UUID            NOT NULL,
+    driver_id               UUID            NOT NULL,
+    trip_id                 UUID,
+    fuel_station_name       VARCHAR(255)    NOT NULL,
+    fuel_station_address    TEXT,
+    city                    VARCHAR(100),
+    state                   VARCHAR(100),
+    latitude                NUMERIC(10,6),
+    longitude               NUMERIC(10,6),
+    fuel_type               fuel_type       NOT NULL,
+    quantity                NUMERIC(10,2)   NOT NULL,
+    unit                    VARCHAR(20)     NOT NULL,
+    price_per_unit          NUMERIC(10,2)   NOT NULL,
+    total_cost              NUMERIC(12,2)   NOT NULL,
+    currency                VARCHAR(10)     NOT NULL DEFAULT 'INR',
+    odometer                NUMERIC(10,2)   NOT NULL,
+    payment_method          VARCHAR(20)     NOT NULL,
+    receipt_number          VARCHAR(100),
+    receipt_image           TEXT,
+    remarks                 TEXT,
+    filled_at               TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    liters                  NUMERIC(10,2)   NOT NULL,
+    cost_per_liter          NUMERIC(10,2)   NOT NULL,
+    odometer_km             NUMERIC(10,2)   NOT NULL,
+    notes                   TEXT,
+    created_by              UUID,
+    updated_by              UUID,
+    created_at              TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    updated_at              TIMESTAMPTZ     NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_fuel_logs_vehicle FOREIGN KEY (vehicle_id)
         REFERENCES vehicles (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_fuel_logs_driver FOREIGN KEY (driver_id)
+        REFERENCES drivers (id) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT fk_fuel_logs_trip FOREIGN KEY (trip_id)
         REFERENCES trips (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT fk_fuel_logs_created_by FOREIGN KEY (created_by)
@@ -279,14 +299,22 @@ CREATE TABLE fuel_logs (
     CONSTRAINT fk_fuel_logs_updated_by FOREIGN KEY (updated_by)
         REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ck_fuel_logs_liters CHECK (liters > 0),
-    CONSTRAINT ck_fuel_logs_cost_per_liter CHECK (cost_per_liter >= 0),
+    CONSTRAINT ck_fuel_logs_cost_per_liter CHECK (cost_per_liter > 0),
     CONSTRAINT ck_fuel_logs_total_cost CHECK (total_cost >= 0),
-    CONSTRAINT ck_fuel_logs_odometer CHECK (odometer_km >= 0)
+    CONSTRAINT ck_fuel_logs_odometer CHECK (odometer_km >= 0),
+    CONSTRAINT ck_fuel_logs_quantity CHECK (quantity > 0),
+    CONSTRAINT ck_fuel_logs_price_per_unit CHECK (price_per_unit > 0),
+    CONSTRAINT ck_fuel_logs_odometer_new CHECK (odometer >= 0),
+    CONSTRAINT ck_fuel_logs_unit CHECK (unit IN ('liters', 'gallons', 'kwh')),
+    CONSTRAINT ck_fuel_logs_payment_method CHECK (payment_method IN ('cash', 'card', 'upi', 'fleet_card', 'other'))
 );
 
 CREATE INDEX idx_fuel_logs_vehicle_id ON fuel_logs (vehicle_id);
+CREATE INDEX idx_fuel_logs_driver_id ON fuel_logs (driver_id);
 CREATE INDEX idx_fuel_logs_trip_id ON fuel_logs (trip_id);
 CREATE INDEX idx_fuel_logs_filled_at ON fuel_logs (filled_at);
+CREATE INDEX idx_fuel_logs_city ON fuel_logs (city);
+CREATE INDEX idx_fuel_logs_state ON fuel_logs (state);
 
 -- =====================================================
 -- EXPENSES

@@ -1,46 +1,58 @@
-import express, { Request, Response } from 'express';
-import { Pool } from 'pg';
-import dotenv from 'dotenv';
-import path from 'path';
-
-// Load environment variables from parent folder .env
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+import express, { NextFunction, Request, Response } from "express";
+import { env } from "./config/env";
+import { FuelLogController } from "./controllers/fuelLogController";
+import { ensureFuelLogSchema } from "./db/ensureFuelLogSchema";
+import { pool } from "./db/pool";
+import { createFuelLogRouter } from "./routes/fuelLogRoutes";
+import { FuelLogService } from "./services/fuelLogService";
+import { ApiError, sendError } from "./utils/api";
 
 const app = express();
-const port = process.env.PORT || 5000;
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
-// Initialize Postgres Pool
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT || '5439'),
+const fuelLogService = new FuelLogService(pool);
+const fuelLogController = new FuelLogController(fuelLogService);
+
+app.get("/", (_req: Request, res: Response) => {
+  res.json({ success: true, message: "Welcome to TransitOps API", data: null });
 });
 
-app.get('/', (req: Request, res: Response) => {
-  res.json({ message: 'Welcome to TransitOps API' });
-});
-
-app.get('/db-test', async (req: Request, res: Response) => {
+app.get("/db-test", async (_req: Request, res: Response) => {
   try {
-    const result = await pool.query('SELECT NOW()');
+    const result = await pool.query("SELECT NOW()");
     res.json({
-      status: 'success',
-      message: 'Connected to PostgreSQL successfully',
-      time: result.rows[0].now,
+      success: true,
+      message: "Connected to PostgreSQL successfully",
+      data: { time: result.rows[0].now },
     });
-  } catch (error: any) {
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to connect to PostgreSQL',
-      error: error.message,
-    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to connect to PostgreSQL";
+    sendError(res, 500, message);
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+app.use("/api/fuel-logs", createFuelLogRouter(fuelLogController));
+
+app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
+  if (error instanceof ApiError) {
+    sendError(res, error.statusCode, error.message);
+    return;
+  }
+
+  console.error(error);
+  sendError(res, 500, "Internal server error.");
+});
+
+async function startServer() {
+  await ensureFuelLogSchema(pool);
+
+  app.listen(env.port, () => {
+    console.log(`Server is running on port ${env.port}`);
+  });
+}
+
+void startServer().catch((error) => {
+  console.error("Failed to start server", error);
+  process.exit(1);
 });
