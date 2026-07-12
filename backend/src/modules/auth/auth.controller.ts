@@ -89,7 +89,7 @@ export async function verifyEmail(req: AuthRequest, res: Response, next: NextFun
 export async function getMe(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const user = await authService.getMe(req.user!.userId);
-    return sendSuccess(res, { user });
+    return sendSuccess(res, user);
   } catch (err) {
     next(err);
   }

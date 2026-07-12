@@ -65,6 +65,7 @@ interface DriverDashboardData {
 
 export default function DriverDashboardPage() {
   const { user, role, loading: authLoading } = useAuth();
+  console.log("DRIVER DASHBOARD STATE DEBUG:", { user, role, authLoading });
   const [dashboardData, setDashboardData] = useState<DriverDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"trips" | "fuel" | "notifications">("trips");
