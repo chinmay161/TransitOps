@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "./context/AuthContext";
 
 export const metadata: Metadata = {
   title: "TransitOps — Smart Transport Operations Platform",
@@ -25,7 +26,9 @@ export default function RootLayout({
           background: "#070D1A",
         }}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

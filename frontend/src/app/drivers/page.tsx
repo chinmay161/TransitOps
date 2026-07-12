@@ -22,8 +22,12 @@ import {
   Envelope,
   User,
   X,
-  FileText
+  FileText,
+  ShieldCheck
 } from "@phosphor-icons/react";
+import { useAuth } from "../context/AuthContext";
+import { DemoSwitcher } from "../../components/DemoSwitcher";
+import { DigiLockerVerificationBlocker } from "../../components/DigiLockerVerificationBlocker";
 
 // API base URL
 const API_URL = "http://localhost:5000";
@@ -46,6 +50,11 @@ interface Driver {
   email: string;
   phone: string | null;
   is_active: boolean;
+
+  verification_status?: "pending" | "verified" | "failed";
+  verification_source?: string | null;
+  verification_date?: string | null;
+  verification_id?: string | null;
 }
 
 // Toast notification interface
@@ -90,6 +99,8 @@ export default function DriverManagementPage() {
   // Watch license expiry for inline warnings
   const watchedLicenseExpiry = watch("license_expiry");
 
+  const { refreshDrivers } = useAuth();
+
   // Fetch all drivers
   const loadDrivers = async () => {
     setLoading(true);
@@ -101,6 +112,7 @@ export default function DriverManagementPage() {
       }
       const data = await response.json();
       setDrivers(data);
+      refreshDrivers();
     } catch (err: any) {
       console.error(err);
       setError(err.message || "An error occurred while loading drivers.");
@@ -275,6 +287,7 @@ export default function DriverManagementPage() {
           </span>
         </a>
         <div className="flex items-center gap-4">
+          <DemoSwitcher />
           <a href="/" className="flex items-center gap-1.5 text-xs text-[#6B7FA3] hover:text-[#F0F4FF] transition-colors font-medium">
             <CaretLeft size={14} /> Back to Landing Page
           </a>
@@ -429,6 +442,7 @@ export default function DriverManagementPage() {
                   <th className="py-4 px-5">Full Name & Contact</th>
                   <th className="py-4 px-5">License Details</th>
                   <th className="py-4 px-5">License Expiry</th>
+                  <th className="py-4 px-5">Verification</th>
                   <th className="py-4 px-5">Status</th>
                   <th className="py-4 px-5">Hire Date</th>
                   <th className="py-4 px-5 text-right">Actions</th>
@@ -486,6 +500,33 @@ export default function DriverManagementPage() {
                             </span>
                           )}
                         </div>
+                      </td>
+
+                      {/* Verification Status */}
+                      <td className="py-4 px-5 relative group/verify-tooltip">
+                        {driver.verification_status === "verified" ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-[#10B981] bg-[#10B981]/12 border border-[#10B981]/20 rounded-full cursor-help">
+                            <CheckCircle size={12} className="text-[#10B981]" /> Verified
+                          </span>
+                        ) : driver.verification_status === "failed" ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-[#ef4444] bg-[#ef4444]/12 border border-[#ef4444]/20 rounded-full">
+                            <XCircle size={12} className="text-[#ef4444]" /> Failed
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-[#f59e0b] bg-[#f59e0b]/12 border border-[#f59e0b]/20 rounded-full">
+                            <Warning size={12} className="text-[#f59e0b]" /> Pending
+                          </span>
+                        )}
+
+                        {/* Verification Details Tooltip on Hover */}
+                        {driver.verification_status === "verified" && (
+                          <div className="absolute z-30 bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-[#111E35] border border-white/10 p-3 rounded-lg shadow-xl pointer-events-none opacity-0 group-hover/verify-tooltip:opacity-100 transition-opacity duration-150 text-[10px] space-y-1 text-left">
+                            <div className="font-bold text-[#F0F4FF] pb-1 border-b border-white/5 uppercase tracking-wide text-[9px] text-center text-[#F5A623]">DigiLocker Record</div>
+                            <div><span className="text-[#6B7FA3]">Source:</span> <strong className="text-[#F0F4FF]">{driver.verification_source}</strong></div>
+                            <div><span className="text-[#6B7FA3]">Verified:</span> <strong className="text-[#F0F4FF]">{driver.verification_date ? new Date(driver.verification_date).toLocaleDateString() : ""}</strong></div>
+                            <div><span className="text-[#6B7FA3]">Ref ID:</span> <strong className="text-[#F0F4FF] font-mono">{driver.verification_id}</strong></div>
+                          </div>
+                        )}
                       </td>
 
                       {/* Status */}
@@ -953,6 +994,43 @@ export default function DriverManagementPage() {
                   </div>
                 </div>
 
+                {/* License Verification Section */}
+                <div className="space-y-3.5">
+                  <h3 className="text-xs uppercase font-bold tracking-wider text-[#F5A623] border-b border-white/5 pb-1 flex items-center gap-1">
+                    <ShieldCheck size={14} className="text-[#10B981]" /> License Verification Details
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs md:text-sm">
+                    <div>
+                      <span className="text-[#6B7FA3] block text-[11px] mb-0.5">Verification Status</span>
+                      {selectedDriver.verification_status === "verified" ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-[#10B981] bg-[#10B981]/12 border border-[#10B981]/20 rounded uppercase">Verified</span>
+                      ) : selectedDriver.verification_status === "failed" ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-[#ef4444] bg-[#ef4444]/12 border border-[#ef4444]/20 rounded uppercase">Failed</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-[#f59e0b] bg-[#f59e0b]/12 border border-[#f59e0b]/20 rounded uppercase">Pending</span>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <span className="text-[#6B7FA3] block text-[11px] mb-0.5">Verification Source</span>
+                      <strong className="text-[#F0F4FF] font-medium">{selectedDriver.verification_source || "N/A"}</strong>
+                    </div>
+
+                    <div>
+                      <span className="text-[#6B7FA3] block text-[11px] mb-0.5">Verification Date</span>
+                      <strong className="text-[#F0F4FF] font-medium">
+                        {selectedDriver.verification_date ? new Date(selectedDriver.verification_date).toLocaleString() : "N/A"}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span className="text-[#6B7FA3] block text-[11px] mb-0.5">Verification ID</span>
+                      <strong className="text-[#F0F4FF] font-medium font-mono">{selectedDriver.verification_id || "N/A"}</strong>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Audit trail */}
                 <div className="bg-[#111E35]/20 p-3.5 rounded-lg border border-white/5 text-[10px] text-[#6B7FA3] flex justify-between">
                   <span>Profile Created: {new Date(selectedDriver.created_at).toLocaleString()}</span>
@@ -1064,6 +1142,8 @@ export default function DriverManagementPage() {
           ))}
         </AnimatePresence>
       </div>
+
+      <DigiLockerVerificationBlocker />
 
     </div>
   );

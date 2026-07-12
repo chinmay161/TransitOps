@@ -25,6 +25,9 @@ import {
   CurrencyDollar,
   X
 } from "@phosphor-icons/react";
+import { useAuth } from "../context/AuthContext";
+import { DemoSwitcher } from "../../components/DemoSwitcher";
+import { DigiLockerVerificationBlocker } from "../../components/DigiLockerVerificationBlocker";
 
 // API base URL
 const API_URL = "http://localhost:5000";
@@ -342,6 +345,7 @@ export default function MaintenanceManagementPage() {
           </span>
         </a>
         <div className="flex items-center gap-4">
+          <DemoSwitcher />
           <a href="/" className="flex items-center gap-1.5 text-xs text-[#6B7FA3] hover:text-[#F0F4FF] transition-colors font-medium">
             <CaretLeft size={14} /> Back to Landing Page
           </a>
@@ -1129,6 +1133,8 @@ export default function MaintenanceManagementPage() {
           ))}
         </AnimatePresence>
       </div>
+
+      <DigiLockerVerificationBlocker />
 
     </div>
   );
