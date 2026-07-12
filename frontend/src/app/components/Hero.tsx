@@ -262,8 +262,8 @@ export default function Hero() {
             transition={{ duration: 0.45, delay: 0.94, ease: [0.23, 1, 0.32, 1] }}
             style={{ display: "flex", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}
           >
-            <a href="/dashboard" id="hero-launch-cta" className="btn-primary" style={{ padding: "13px 28px", fontSize: "0.9375rem" }}>
-              Launch Dashboard <ArrowRight size={17} weight="bold" />
+            <a href="/drivers" id="hero-launch-cta" className="btn-primary" style={{ padding: "13px 28px", fontSize: "0.9375rem" }}>
+              Launch App <ArrowRight size={17} weight="bold" />
             </a>
             <a href="#demo" id="hero-demo-cta" className="btn-ghost" style={{ padding: "13px 28px", fontSize: "0.9375rem" }}>
               <Play size={15} weight="fill" /> View Demo

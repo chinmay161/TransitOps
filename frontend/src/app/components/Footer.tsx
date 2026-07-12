@@ -1,20 +1,20 @@
 "use client";
 
-import { ReactNode } from "react";
+import React from "react";
 import { GithubLogo, BookOpen, ShieldCheck, Lifebuoy, InstagramLogo, TwitterLogo, YoutubeLogo } from "@phosphor-icons/react";
 
 interface FooterLink {
   label: string;
   href: string;
-  icon?: ReactNode;
+  icon?: React.ReactNode;
 }
 
-interface FooterColumn {
+interface FooterCol {
   heading: string;
   links: FooterLink[];
 }
 
-const cols: FooterColumn[] = [
+const cols: FooterCol[] = [
   {
     heading: "Platform",
     links: [

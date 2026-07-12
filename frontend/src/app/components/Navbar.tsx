@@ -174,7 +174,7 @@ export default function Navbar() {
             >
               Login
             </a>
-            <a href="/dashboard" id="nav-launch" className="btn-primary" style={{ padding: "8px 18px", fontSize: "0.875rem" }}>
+            <a href="/drivers" id="nav-launch" className="btn-primary" style={{ padding: "8px 18px", fontSize: "0.875rem" }}>
               Launch App
             </a>
           </div>
@@ -242,7 +242,7 @@ export default function Navbar() {
             </nav>
             <div style={{ display: "flex", gap: "10px" }}>
               <a href="/login" className="btn-ghost" style={{ flex: 1, justifyContent: "center" }}>Login</a>
-              <a href="/dashboard" className="btn-primary" style={{ flex: 1, justifyContent: "center" }}>Launch App</a>
+              <a href="/drivers" className="btn-primary" style={{ flex: 1, justifyContent: "center" }}>Launch App</a>
             </div>
           </motion.div>
         )}

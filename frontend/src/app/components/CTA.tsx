@@ -95,7 +95,7 @@ export default function CTA() {
           transition={{ duration: 0.45, delay: 0.24, ease: [0.23, 1, 0.32, 1] }}
           style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}
         >
-          <a href="/dashboard" id="cta-launch" className="btn-primary" style={{ padding: "14px 32px", fontSize: "0.9375rem" }}>
+          <a href="/drivers" id="cta-launch" className="btn-primary" style={{ padding: "14px 32px", fontSize: "0.9375rem" }}>
             Launch App <ArrowRight size={17} weight="bold" />
           </a>
           <a href="#docs" id="cta-docs" className="btn-ghost" style={{ padding: "14px 32px", fontSize: "0.9375rem" }}>
