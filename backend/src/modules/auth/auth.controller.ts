@@ -28,6 +28,8 @@ export async function login(req: AuthRequest, res: Response, next: NextFunction)
     const result = await authService.login(email, password);
 
     if ('mustChangePassword' in result) {
+      const token = signToken(result.user);
+      res.cookie('access_token', token, COOKIE_OPTIONS);
       return sendSuccess(res, { mustChangePassword: true });
     }
 

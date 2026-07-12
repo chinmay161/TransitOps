@@ -24,7 +24,10 @@ function safeUser(user: User): Omit<User, 'password_hash' | 'email_verification_
 export async function login(
   email: string,
   password: string
-): Promise<{ response: LoginResponse; user: AuthenticatedUser } | { mustChangePassword: true }> {
+): Promise<
+  | { response: LoginResponse; user: AuthenticatedUser }
+  | { mustChangePassword: true; user: AuthenticatedUser }
+> {
   const user = await repo.findUserByEmail(email);
 
   if (!user) {
@@ -45,7 +48,10 @@ export async function login(
   }
 
   if (user.must_change_password) {
-    return { mustChangePassword: true };
+    return {
+      mustChangePassword: true,
+      user: { userId: user.id, role: user.role, email: user.email }
+    };
   }
 
   await repo.updateLastLogin(user.id);
