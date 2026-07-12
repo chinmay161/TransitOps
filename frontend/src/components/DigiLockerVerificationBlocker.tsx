@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "../app/context/AuthContext";
+import { useState } from "react";
+import { useAuth } from "@/context/auth-context";
 import { motion, AnimatePresence } from "motion/react";
 import {
   ShieldCheck,
@@ -28,20 +28,37 @@ interface VerificationData {
 }
 
 export function DigiLockerVerificationBlocker() {
-  const { role, setRole, mockDriverId, mockDriverName, mockLicenseNumber, refreshDrivers } = useAuth();
+  const { user, refresh } = useAuth();
+  const [driverName] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("transitops_mock_driver_name") || user?.full_name || "";
+    }
+    return user?.full_name || "";
+  });
+  const [driverLicenseNumber] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("transitops_mock_license") || "MH14DL2024012345";
+    }
+    return "MH14DL2024012345";
+  });
+  const [driverId] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("transitops_mock_driver_id") || user?.id || null;
+    }
+    return user?.id || null;
+  });
   
   const [modalOpen, setModalOpen] = useState(false);
   const [step, setStep] = useState<"idle" | "connecting" | "authenticating" | "retrieving" | "verifying" | "success" | "failure">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [verifiedData, setVerifiedData] = useState<VerificationData | null>(null);
 
-  // If role is not unverified_driver, don't show the blocker
-  if (role !== "unverified_driver") {
+  if (!user || user.role !== "driver") {
     return null;
   }
 
   const startVerification = async () => {
-    if (!mockDriverId) {
+    if (!driverId) {
       alert("No driver profile found in the database. Please switch to Fleet Manager and add a driver first!");
       return;
     }
@@ -50,30 +67,25 @@ export function DigiLockerVerificationBlocker() {
     setErrorMsg("");
     setVerifiedData(null);
     
-    // Step 1: Connecting...
     setStep("connecting");
     await new Promise((r) => setTimeout(r, 600));
     
-    // Step 2: Authenticating...
     setStep("authenticating");
     await new Promise((r) => setTimeout(r, 600));
     
-    // Step 3: Retrieving License...
     setStep("retrieving");
     await new Promise((r) => setTimeout(r, 600));
     
-    // Step 4: Verifying...
     setStep("verifying");
     await new Promise((r) => setTimeout(r, 600));
 
-    // Call Mock API
     try {
       const res = await fetch("http://localhost:5000/api/verification/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          driver_id: mockDriverId,
-          license_number: mockLicenseNumber
+          driver_id: driverId,
+          license_number: driverLicenseNumber
         })
       });
       
@@ -85,7 +97,7 @@ export function DigiLockerVerificationBlocker() {
       
       setVerifiedData(resData.data);
       setStep("success");
-      await refreshDrivers();
+      await refresh();
     } catch (err: any) {
       setErrorMsg(err.message || "An unexpected error occurred during DigiLocker retrieval.");
       setStep("failure");
@@ -94,7 +106,9 @@ export function DigiLockerVerificationBlocker() {
 
   const handleContinue = () => {
     setModalOpen(false);
-    setRole("verified_driver");
+    if (typeof window !== "undefined") {
+      localStorage.setItem("transitops_mock_role", "verified_driver");
+    }
   };
 
   return (
@@ -127,8 +141,8 @@ export function DigiLockerVerificationBlocker() {
         <div className="bg-[#111E35] border border-white/5 rounded-lg p-4 max-w-md mx-auto flex items-center justify-between text-left text-xs">
           <div>
             <div className="text-[10px] text-[#F5A623] font-bold uppercase tracking-wider">Demo Mode Session</div>
-            <div className="text-[#F0F4FF] font-semibold mt-0.5">{mockDriverName}</div>
-            <div className="text-[#6B7FA3] font-mono text-[10px] mt-0.5">License: {mockLicenseNumber}</div>
+            <div className="text-[#F0F4FF] font-semibold mt-0.5">{driverName}</div>
+            <div className="text-[#6B7FA3] font-mono text-[10px] mt-0.5">License: {driverLicenseNumber}</div>
           </div>
           <span className="px-2.5 py-1 text-[9px] font-extrabold text-[#F5A623] bg-[#F5A623]/10 border border-[#F5A623]/20 rounded uppercase">
             Verification Required

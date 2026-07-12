@@ -25,7 +25,6 @@ import {
   FileText,
   ShieldCheck
 } from "@phosphor-icons/react";
-import { useAuth } from "../context/AuthContext";
 import { DemoSwitcher } from "../../components/DemoSwitcher";
 import { DigiLockerVerificationBlocker } from "../../components/DigiLockerVerificationBlocker";
 
@@ -99,8 +98,6 @@ export default function DriverManagementPage() {
   // Watch license expiry for inline warnings
   const watchedLicenseExpiry = watch("license_expiry");
 
-  const { refreshDrivers } = useAuth();
-
   // Fetch all drivers
   const loadDrivers = async () => {
     setLoading(true);
@@ -112,7 +109,6 @@ export default function DriverManagementPage() {
       }
       const data = await response.json();
       setDrivers(data);
-      refreshDrivers();
     } catch (err: any) {
       console.error(err);
       setError(err.message || "An error occurred while loading drivers.");

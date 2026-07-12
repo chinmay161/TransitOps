@@ -31,7 +31,6 @@ import {
   RoadHorizon,
   FileText
 } from "@phosphor-icons/react";
-import { useAuth } from "../context/AuthContext";
 import { DemoSwitcher } from "../../components/DemoSwitcher";
 import { DigiLockerVerificationBlocker } from "../../components/DigiLockerVerificationBlocker";
 
