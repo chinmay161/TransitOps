@@ -65,46 +65,43 @@ CREATE TYPE expense_category AS ENUM (
     'other'
 );
 
--- Approval workflow — Visitor → Fleet Manager Application → Pending → Admin Approval → Fleet Manager
--- A visitor registers as a Fleet Manager applicant (role = fleet_manager, approval_status = pending).
--- Pending applicants have basic access only (login, profile, application status).
--- An Admin reviews and either approves or rejects the application.
--- On approval: approval_status becomes approved; the Fleet Manager gains full permissions.
--- Approved Fleet Managers can create Drivers and Dispatchers.
--- Drivers and Dispatchers cannot self-register; they are created by Fleet Managers.
-CREATE TYPE approval_status AS ENUM (
-    'pending',
-    'approved',
-    'rejected'
-);
-
 -- =====================================================
 -- USERS
 -- =====================================================
+-- Account creation flow:
+--   Admin creates Fleet Managers (and other Admins).
+--   Fleet Managers create Drivers and Dispatchers.
+--   Every account is created by an existing authorized user (created_by FK).
+--
+-- Password workflow:
+--   New accounts start with must_change_password = TRUE.
+--   On first login, the user is forced to set a new password.
+--   password_changed_at records when the password was last changed.
+--   After a successful password change, must_change_password is set to FALSE.
+-- =====================================================
 CREATE TABLE users (
-    id              UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
-    email           VARCHAR(255)  NOT NULL,
-    password_hash   TEXT          NOT NULL,
-    full_name       VARCHAR(255)  NOT NULL,
-    phone           VARCHAR(50),
-    role            user_role         NOT NULL DEFAULT 'fleet_manager',
-    approval_status approval_status   NOT NULL DEFAULT 'pending',
-    approved_at     TIMESTAMPTZ,
-    approved_by     UUID,
-    rejection_reason TEXT,
-    is_active       BOOLEAN           NOT NULL DEFAULT true,
-    last_login      TIMESTAMPTZ,
-    created_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    id                      UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    email                   VARCHAR(255)    NOT NULL,
+    password_hash           TEXT            NOT NULL,
+    full_name               VARCHAR(255)    NOT NULL,
+    phone                   VARCHAR(50),
+    role                    user_role       NOT NULL DEFAULT 'fleet_manager',
+    must_change_password    BOOLEAN         NOT NULL DEFAULT TRUE,
+    password_changed_at     TIMESTAMPTZ,
+    is_active               BOOLEAN         NOT NULL DEFAULT true,
+    last_login              TIMESTAMPTZ,
+    created_by              UUID,
+    created_at              TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    updated_at              TIMESTAMPTZ     NOT NULL DEFAULT now(),
 
     CONSTRAINT uq_users_email UNIQUE (email),
-    CONSTRAINT fk_users_approved_by FOREIGN KEY (approved_by)
+    CONSTRAINT fk_users_created_by FOREIGN KEY (created_by)
         REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ck_users_phone CHECK (phone IS NULL OR phone ~ '^\+?[0-9\s\-\(\)]{7,20}$')
 );
 
 CREATE INDEX idx_users_role ON users (role);
-CREATE INDEX idx_users_approval_status ON users (approval_status);
+CREATE INDEX idx_users_created_by ON users (created_by);
 
 -- =====================================================
 -- DRIVERS
