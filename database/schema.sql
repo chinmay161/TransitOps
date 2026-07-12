@@ -59,10 +59,19 @@ CREATE TYPE notification_status AS ENUM (
 
 CREATE TYPE expense_category AS ENUM (
     'fuel',
-    'maintenance',
     'toll',
-    'parking',
+    'maintenance',
     'repair',
+    'insurance',
+    'parking',
+    'salary',
+    'permit',
+    'taxes',
+    'driver_allowance',
+    'food',
+    'hotel',
+    'office_expenses',
+    'miscellaneous',
     'other'
 );
 
@@ -324,44 +333,78 @@ CREATE INDEX idx_fuel_logs_state ON fuel_logs (state);
 -- EXPENSES
 -- =====================================================
 CREATE TABLE expenses (
-    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    vehicle_id      UUID            NOT NULL,
-    trip_id         UUID,
-    category        expense_category NOT NULL,
-    amount          NUMERIC(12,2)   NOT NULL,
-    description     TEXT,
-    expense_date    DATE            NOT NULL,
-    created_by      UUID,
-    updated_by      UUID,
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    id                  UUID             PRIMARY KEY DEFAULT gen_random_uuid(),
+    vehicle_id          UUID             NOT NULL,
+    driver_id           UUID,
+    trip_id             UUID,
+    category            expense_category NOT NULL,
+    vendor_name         VARCHAR(255),
+    vendor_contact      VARCHAR(100),
+    vendor_gst          VARCHAR(100),
+    invoice_number      VARCHAR(100),
+    receipt_number      VARCHAR(100),
+    receipt_image       TEXT,
+    description         TEXT,
+    payment_method      VARCHAR(30)      NOT NULL,
+    amount              NUMERIC(12,2)    NOT NULL,
+    tax                 NUMERIC(12,2)    NOT NULL DEFAULT 0,
+    discount            NUMERIC(12,2)    NOT NULL DEFAULT 0,
+    total_amount        NUMERIC(12,2),
+    expense_date        DATE             NOT NULL,
+    approved_by         UUID,
+    approved_at         TIMESTAMPTZ,
+    expense_status      VARCHAR(30)      NOT NULL DEFAULT 'pending',
+    remarks             TEXT,
+    vendor              VARCHAR(255),
+    created_by          UUID,
+    updated_by          UUID,
+    created_at          TIMESTAMPTZ      NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ      NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_expenses_vehicle FOREIGN KEY (vehicle_id)
         REFERENCES vehicles (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_expenses_driver FOREIGN KEY (driver_id)
+        REFERENCES drivers (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT fk_expenses_trip FOREIGN KEY (trip_id)
         REFERENCES trips (id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_expenses_approved_by FOREIGN KEY (approved_by)
+        REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT fk_expenses_created_by FOREIGN KEY (created_by)
         REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT fk_expenses_updated_by FOREIGN KEY (updated_by)
         REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT ck_expenses_amount CHECK (amount >= 0)
+    CONSTRAINT ck_expenses_amount CHECK (amount > 0),
+    CONSTRAINT ck_expenses_tax CHECK (tax >= 0),
+    CONSTRAINT ck_expenses_discount CHECK (discount >= 0),
+    CONSTRAINT ck_expenses_total_amount CHECK (total_amount IS NULL OR total_amount >= 0),
+    CONSTRAINT ck_expenses_payment_method CHECK (payment_method IN ('cash', 'card', 'upi', 'fleet_card', 'bank_transfer', 'other')),
+    CONSTRAINT ck_expenses_status CHECK (expense_status IN ('pending', 'approved', 'rejected', 'paid'))
 );
 
 CREATE INDEX idx_expenses_vehicle_id ON expenses (vehicle_id);
+CREATE INDEX idx_expenses_driver_id ON expenses (driver_id);
 CREATE INDEX idx_expenses_trip_id ON expenses (trip_id);
 CREATE INDEX idx_expenses_expense_date ON expenses (expense_date);
+CREATE INDEX idx_expenses_vendor_name ON expenses (vendor_name);
+CREATE INDEX idx_expenses_invoice_number ON expenses (invoice_number);
+CREATE INDEX idx_expenses_status ON expenses (expense_status);
 
 -- =====================================================
 -- NOTIFICATIONS
 -- =====================================================
 CREATE TABLE notifications (
-    id          UUID                    PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id     UUID                    NOT NULL,
-    title       VARCHAR(255)            NOT NULL,
-    message     TEXT                    NOT NULL,
-    status      notification_status     NOT NULL DEFAULT 'unread',
-    created_at  TIMESTAMPTZ             NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMPTZ             NOT NULL DEFAULT now(),
+    id                  UUID                    PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id             UUID                    NOT NULL,
+    title               VARCHAR(255)            NOT NULL,
+    message             TEXT                    NOT NULL,
+    status              notification_status     NOT NULL DEFAULT 'unread',
+    notification_type   VARCHAR(100)            NOT NULL DEFAULT 'system',
+    entity_type         VARCHAR(100),
+    entity_id           UUID,
+    read_at             TIMESTAMPTZ,
+    deleted_at          TIMESTAMPTZ,
+    created_at          TIMESTAMPTZ             NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ             NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_notifications_user FOREIGN KEY (user_id)
         REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -369,5 +412,70 @@ CREATE TABLE notifications (
 
 CREATE INDEX idx_notifications_user_id ON notifications (user_id);
 CREATE INDEX idx_notifications_status ON notifications (status);
+CREATE INDEX idx_notifications_type ON notifications (notification_type);
+CREATE INDEX idx_notifications_deleted_at ON notifications (deleted_at);
 CREATE INDEX idx_notifications_user_unread ON notifications (user_id, created_at DESC)
     WHERE status = 'unread';
+
+-- =====================================================
+-- ADMIN SETTINGS
+-- =====================================================
+CREATE TABLE admin_settings (
+    id                          UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_name                VARCHAR(255)    NOT NULL DEFAULT 'TransitOps',
+    company_logo                TEXT,
+    currency                    VARCHAR(10)     NOT NULL DEFAULT 'INR',
+    distance_unit               VARCHAR(20)     NOT NULL DEFAULT 'km',
+    fuel_unit                   VARCHAR(20)     NOT NULL DEFAULT 'liters',
+    timezone                    VARCHAR(100)    NOT NULL DEFAULT 'Asia/Calcutta',
+    language                    VARCHAR(30)     NOT NULL DEFAULT 'en',
+    fuel_price_provider         VARCHAR(100)    NOT NULL DEFAULT 'manual',
+    theme                       VARCHAR(50)     NOT NULL DEFAULT 'system',
+    notification_preferences    JSONB           NOT NULL DEFAULT '{"maintenance_due":true,"license_expiring":true,"insurance_expiring":true,"trip_delayed":true,"vehicle_offline":true}'::jsonb,
+    email_settings              JSONB           NOT NULL DEFAULT '{"provider":"smtp","from_email":"","from_name":"TransitOps","smtp_host":"","smtp_port":587,"smtp_secure":false,"smtp_username":"","smtp_password":"","reply_to":""}'::jsonb,
+    role_permissions            JSONB           NOT NULL DEFAULT '{"admin":["all"],"fleet_manager":["dashboard","vehicles","drivers","trips","maintenance","fuel_logs","expenses","reports","notifications"],"dispatcher":["dashboard","trips","notifications"],"driver":["dashboard","fuel_logs","expenses","notifications"]}'::jsonb,
+    application_version         VARCHAR(50)     NOT NULL DEFAULT '1.0.0',
+    created_at                  TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    updated_at                  TIMESTAMPTZ     NOT NULL DEFAULT now()
+);
+
+-- =====================================================
+-- AUDIT LOGS
+-- =====================================================
+CREATE TABLE audit_logs (
+    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    actor_id        UUID,
+    module_name     VARCHAR(100)    NOT NULL,
+    entity_type     VARCHAR(100)    NOT NULL,
+    entity_id       UUID,
+    action_name     VARCHAR(100)    NOT NULL,
+    old_value       JSONB,
+    new_value       JSONB,
+    created_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
+
+    CONSTRAINT fk_audit_logs_actor FOREIGN KEY (actor_id)
+        REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+CREATE INDEX idx_audit_logs_module_name ON audit_logs (module_name, created_at DESC);
+CREATE INDEX idx_audit_logs_entity_type ON audit_logs (entity_type, created_at DESC);
+
+-- =====================================================
+-- REPORT HISTORY
+-- =====================================================
+CREATE TABLE report_history (
+    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    report_type     VARCHAR(100)    NOT NULL,
+    report_name     VARCHAR(255)    NOT NULL,
+    filters         JSONB           NOT NULL DEFAULT '{}'::jsonb,
+    format          VARCHAR(20)     NOT NULL DEFAULT 'json',
+    is_favorite     BOOLEAN         NOT NULL DEFAULT false,
+    generated_at    TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    generated_by    UUID,
+
+    CONSTRAINT fk_report_history_generated_by FOREIGN KEY (generated_by)
+        REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+CREATE INDEX idx_report_history_type ON report_history (report_type, generated_at DESC);
+CREATE INDEX idx_report_history_favorite ON report_history (is_favorite, generated_at DESC);

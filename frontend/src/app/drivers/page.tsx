@@ -29,7 +29,7 @@ import { DemoSwitcher } from "../../components/DemoSwitcher";
 import { DigiLockerVerificationBlocker } from "../../components/DigiLockerVerificationBlocker";
 
 // API base URL
-const API_URL = "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
 // Interface for Driver & Joined User details
 interface Driver {
@@ -110,9 +110,12 @@ export default function DriverManagementPage() {
       const data = await response.json();
       setDrivers(data);
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || "An error occurred while loading drivers.");
-      showToast("error", err.message || "Could not connect to the backend server.");
+      const message =
+        err instanceof TypeError
+          ? `Backend API is unavailable at ${API_URL}. Start PostgreSQL and the backend server, then retry.`
+          : err.message || "An error occurred while loading drivers.";
+      setError(message);
+      showToast("error", message);
     } finally {
       setLoading(false);
     }

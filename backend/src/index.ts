@@ -1,12 +1,30 @@
 import 'dotenv/config';
 import express, { NextFunction, Request, Response } from "express";
 import cookieParser from "cookie-parser";
+import { AdminSettingsController } from "./controllers/adminSettingsController";
 import { env } from "./config/env";
+import { DashboardController } from "./controllers/dashboardController";
+import { ExpenseController } from "./controllers/expenseController";
 import { FuelLogController } from "./controllers/fuelLogController";
+import { NotificationController } from "./controllers/notificationController";
+import { ReportController } from "./controllers/reportController";
+import { ensureAdminSettingsSchema } from "./db/ensureAdminSettingsSchema";
+import { ensureEnterpriseOpsSchema } from "./db/ensureEnterpriseOpsSchema";
+import { ensureExpenseSchema } from "./db/ensureExpenseSchema";
 import { ensureFuelLogSchema } from "./db/ensureFuelLogSchema";
 import { pool } from "./db/pool";
+import { createAdminSettingsRouter } from "./routes/adminSettingsRoutes";
+import { createDashboardRouter } from "./routes/dashboardRoutes";
+import { createExpenseRouter } from "./routes/expenseRoutes";
 import { createFuelLogRouter } from "./routes/fuelLogRoutes";
+import { createNotificationRouter } from "./routes/notificationRoutes";
+import { createReportRouter } from "./routes/reportRoutes";
+import { AdminSettingsService } from "./services/adminSettingsService";
+import { DashboardService } from "./services/dashboardService";
+import { ExpenseService } from "./services/expenseService";
 import { FuelLogService } from "./services/fuelLogService";
+import { NotificationService } from "./services/notificationService";
+import { ReportService } from "./services/reportService";
 import { ApiError, sendError } from "./utils/api";
 import { authRouter } from "./modules/auth/index.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -20,7 +38,7 @@ app.use(cookieParser());
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
@@ -29,6 +47,16 @@ app.use((req, res, next) => {
 
 const fuelLogService = new FuelLogService(pool);
 const fuelLogController = new FuelLogController(fuelLogService);
+const dashboardService = new DashboardService(pool);
+const dashboardController = new DashboardController(dashboardService);
+const expenseService = new ExpenseService(pool);
+const expenseController = new ExpenseController(expenseService);
+const reportService = new ReportService(pool);
+const reportController = new ReportController(reportService);
+const notificationService = new NotificationService(pool);
+const notificationController = new NotificationController(notificationService);
+const adminSettingsService = new AdminSettingsService(pool);
+const adminSettingsController = new AdminSettingsController(adminSettingsService);
 
 import { MockDigiLockerService } from "./services/digilocker/MockDigiLockerService";
 const mockDigiLockerService = new MockDigiLockerService(pool);
@@ -889,6 +917,13 @@ app.post('/api/verification/verify', async (req: Request, res: Response) => {
   }
 });
 
+app.use("/api/fuel-logs", createFuelLogRouter(fuelLogController));
+app.use("/api/dashboard", createDashboardRouter(dashboardController));
+app.use("/api/expenses", createExpenseRouter(expenseController));
+app.use("/api/reports", createReportRouter(reportController));
+app.use("/api/notifications", createNotificationRouter(notificationController));
+app.use("/api/admin-settings", createAdminSettingsRouter(adminSettingsController));
+
 // GET /api/verification/status/:driverId - Get verification status of a driver
 app.get('/api/verification/status/:driverId', (req: Request, res: Response) => {
   const { driverId } = req.params;
@@ -1452,7 +1487,6 @@ app.delete('/trips/:id', async (req: Request, res: Response) => {
   }
 });
 
-app.use("/api/fuel-logs", createFuelLogRouter(fuelLogController));
 app.use("/api/auth", authRouter);
 
 app.get("/api/health", (_req: Request, res: Response) => {
@@ -1463,6 +1497,9 @@ app.use(errorHandler);
 
 async function startServer() {
   await ensureFuelLogSchema(pool);
+  await ensureExpenseSchema(pool);
+  await ensureAdminSettingsSchema(pool);
+  await ensureEnterpriseOpsSchema(pool);
 
   app.listen(env.PORT, () => {
     console.log(`Server is running on port ${env.PORT}`);
