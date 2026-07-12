@@ -18,15 +18,15 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-<<<<<<< HEAD
-    <html lang="en" className={`${geist.variable} ${geistMono.variable}`} style={{ colorScheme: "dark" }}>
-      <body style={{ fontFamily: "var(--font-geist), 'Inter', system-ui, sans-serif", background: "#070D1A" }}>
+    <html lang="en" style={{ colorScheme: "dark" }}>
+      <body
+        style={{
+          fontFamily: "'Inter', system-ui, sans-serif",
+          background: "#070D1A",
+        }}
+      >
         {children}
       </body>
-=======
-    <html lang="en">
-      <body>{children}</body>
->>>>>>> 8b9ef1e (feat(fuel-log): add complete fuel log module with CRUD, fuel price fallback, frontend and backend)
     </html>
   );
 }
