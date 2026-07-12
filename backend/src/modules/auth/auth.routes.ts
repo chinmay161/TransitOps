@@ -14,6 +14,9 @@ router.get('/me', authenticate, authController.getMe);
 router.post('/register/driver', authController.registerDriver);
 router.post('/register/dispatcher', authController.registerDispatcher);
 
+// Development-only verification simulator
+router.post('/dev/verify-email', authController.devVerifyEmail);
+
 // Admin-only: create Fleet Manager accounts
 router.post('/users/fleet-managers', authenticate, authorize('admin'), authController.createFleetManager);
 

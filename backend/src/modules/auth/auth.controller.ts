@@ -1,4 +1,4 @@
-import { Response, NextFunction } from 'express';
+import { Response, NextFunction, Request } from 'express';
 import {
   loginSchema,
   changePasswordSchema,
@@ -11,6 +11,7 @@ import * as authService from './auth.service.js';
 import { signToken } from './jwt.js';
 import { sendSuccess } from '../../utils/response.js';
 import type { AuthRequest } from './types.js';
+import { AppError } from '../../utils/AppError.js';
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -108,6 +109,7 @@ export async function createFleetManager(req: AuthRequest, res: Response, next: 
 // Driver self-registration
 export async function registerDriver(req: AuthRequest, res: Response, next: NextFunction) {
   try {
+    console.log('[1] Register request received');
     const input = registerDriverSchema.parse(req.body);
     const result = await authService.registerDriver(input);
     return sendSuccess(res, result, 201);
@@ -119,9 +121,27 @@ export async function registerDriver(req: AuthRequest, res: Response, next: Next
 // Dispatcher self-registration
 export async function registerDispatcher(req: AuthRequest, res: Response, next: NextFunction) {
   try {
+    console.log('[1] Register request received');
     const input = registerDispatcherSchema.parse(req.body);
     const result = await authService.registerDispatcher(input);
     return sendSuccess(res, result, 201);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Development-only email verification simulator
+export async function devVerifyEmail(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (process.env.NODE_ENV !== 'development') {
+      throw new AppError(403, 'FORBIDDEN', 'This endpoint is only available in development mode');
+    }
+    const { email } = req.body;
+    if (!email) {
+      throw new AppError(400, 'BAD_REQUEST', 'Email is required');
+    }
+    await authService.devVerifyEmail(email);
+    return sendSuccess(res, { message: 'Email verified (Development Mode)' }, 200);
   } catch (err) {
     next(err);
   }
