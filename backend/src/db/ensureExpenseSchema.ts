@@ -106,17 +106,22 @@ const statements = [
   `ALTER TABLE expenses ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ`,
   `ALTER TABLE expenses ADD COLUMN IF NOT EXISTS expense_status VARCHAR(30) NOT NULL DEFAULT 'pending'`,
   `ALTER TABLE expenses ADD COLUMN IF NOT EXISTS remarks TEXT`,
+  `ALTER TABLE expenses ADD COLUMN IF NOT EXISTS maintenance_id UUID`,
   `ALTER TABLE expenses
     ADD CONSTRAINT fk_expenses_driver
     FOREIGN KEY (driver_id) REFERENCES drivers (id) ON DELETE SET NULL ON UPDATE CASCADE`,
   `ALTER TABLE expenses
     ADD CONSTRAINT fk_expenses_approved_by
     FOREIGN KEY (approved_by) REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE`,
+  `ALTER TABLE expenses
+    ADD CONSTRAINT fk_expenses_maintenance
+    FOREIGN KEY (maintenance_id) REFERENCES maintenance_records (id) ON DELETE CASCADE`,
   `CREATE INDEX IF NOT EXISTS idx_expenses_driver_id ON expenses (driver_id)`,
   `CREATE INDEX IF NOT EXISTS idx_expenses_vendor ON expenses (vendor)`,
   `CREATE INDEX IF NOT EXISTS idx_expenses_vendor_name ON expenses (vendor_name)`,
   `CREATE INDEX IF NOT EXISTS idx_expenses_invoice_number ON expenses (invoice_number)`,
   `CREATE INDEX IF NOT EXISTS idx_expenses_status ON expenses (expense_status)`,
+  `CREATE INDEX IF NOT EXISTS idx_expenses_maintenance_id ON expenses (maintenance_id)`,
   `ALTER TABLE expenses
     ADD CONSTRAINT ck_expenses_payment_method CHECK (
       payment_method IS NULL OR payment_method IN ('cash', 'card', 'upi', 'fleet_card', 'bank_transfer', 'other')

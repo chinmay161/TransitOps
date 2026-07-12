@@ -424,6 +424,7 @@ export class DashboardService {
                 SELECT SUM(e.amount)
                 FROM expenses e
                 WHERE DATE_TRUNC('month', e.expense_date) = DATE_TRUNC('month', CURRENT_DATE)
+                  AND e.category NOT IN ('fuel', 'maintenance')
                   ${expenseFilter.clause ? `AND ${expenseFilter.clause.replace(/^WHERE\s+/i, "")}` : ""}
               ), 0)
               +
@@ -904,7 +905,8 @@ export class DashboardService {
             SELECT SUM(cost) FROM maintenance_records m ${maintenanceFilter.clause}
           ), 0)::float8 AS maintenance_cost,
           COALESCE((
-            SELECT SUM(amount) FROM expenses e ${expenseFilter.clause}
+            SELECT SUM(amount) FROM expenses e
+            ${expenseFilter.clause ? expenseFilter.clause + " AND e.category NOT IN ('fuel', 'maintenance')" : "WHERE e.category NOT IN ('fuel', 'maintenance')"}
           ), 0)::float8 AS other_expenses`,
         [...fuelFilter.values, ...maintenanceFilter.values, ...expenseFilter.values],
       ),

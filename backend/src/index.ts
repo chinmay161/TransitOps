@@ -696,9 +696,38 @@ app.post('/maintenance', async (req: Request, res: Response) => {
       cost !== undefined && cost !== null ? Number(cost) : null,
       notes || null
     ]);
+
+    const createdRecord = result.rows[0];
+    const finalCost = cost !== undefined && cost !== null ? Number(cost) : 0;
+    if (status === 'completed' && finalCost > 0) {
+      const expenseDate = completed_date || new Date().toISOString().split('T')[0];
+      const expenseDesc = `Maintenance: ${type}${description ? ` - ${description}` : ''}`;
+      await client.query(
+        `INSERT INTO expenses (
+          vehicle_id,
+          category,
+          amount,
+          tax,
+          discount,
+          total_amount,
+          expense_date,
+          payment_method,
+          expense_status,
+          description,
+          maintenance_id
+        ) VALUES ($1, 'maintenance', $2, 0, 0, $2, $3, 'other', 'approved', $4, $5)`,
+        [
+          vehicle_id,
+          finalCost,
+          expenseDate,
+          expenseDesc,
+          createdRecord.id
+        ]
+      );
+    }
     
     await client.query('COMMIT');
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(createdRecord);
   } catch (error: any) {
     await client.query('ROLLBACK');
     console.error('Error creating maintenance:', error);
@@ -825,6 +854,44 @@ app.put('/maintenance/:id', async (req: Request, res: Response) => {
       notes !== undefined ? (notes || null) : undefined,
       id
     ]);
+
+    if (targetStatus === 'completed') {
+      const finalCost = cost !== undefined && cost !== null ? Number(cost) : (currentRecord.cost ? Number(currentRecord.cost) : 0);
+      if (finalCost > 0) {
+        const finalVehicleId = vehicle_id || currentRecord.vehicle_id;
+        const finalType = type || currentRecord.type;
+        const finalDescription = description !== undefined ? description : currentRecord.description;
+        const expenseDate = completed_date || new Date().toISOString().split('T')[0];
+        const expenseDesc = `Maintenance: ${finalType}${finalDescription ? ` - ${finalDescription}` : ''}`;
+        
+        // Prevent duplicate insertions
+        const existingExpense = await client.query('SELECT id FROM expenses WHERE maintenance_id = $1', [id]);
+        if (existingExpense.rows.length === 0) {
+          await client.query(
+            `INSERT INTO expenses (
+              vehicle_id,
+              category,
+              amount,
+              tax,
+              discount,
+              total_amount,
+              expense_date,
+              payment_method,
+              expense_status,
+              description,
+              maintenance_id
+            ) VALUES ($1, 'maintenance', $2, 0, 0, $2, $3, 'other', 'approved', $4, $5)`,
+            [
+              finalVehicleId,
+              finalCost,
+              expenseDate,
+              expenseDesc,
+              id
+            ]
+          );
+        }
+      }
+    }
     
     await client.query('COMMIT');
     

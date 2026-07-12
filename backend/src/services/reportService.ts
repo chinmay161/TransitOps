@@ -191,7 +191,7 @@ export class ReportService {
         return this.pool.query(
           `SELECT
             COALESCE((SELECT SUM(total_cost) FROM fuel_logs), 0)::float8 AS total_fuel_cost,
-            COALESCE((SELECT SUM(amount) FROM expenses), 0)::float8 AS total_expense,
+            COALESCE((SELECT SUM(amount) FROM expenses WHERE category NOT IN ('fuel', 'maintenance')), 0)::float8 AS total_expense,
             COALESCE((SELECT SUM(cost) FROM maintenance_records), 0)::float8 AS maintenance_cost,
             COALESCE((SELECT AVG(total_cost) FROM fuel_logs), 0)::float8 AS average_fuel_cost,
             COALESCE((
@@ -318,7 +318,7 @@ export class ReportService {
         `SELECT
           COALESCE((SELECT SUM(total_cost) FROM fuel_logs), 0)::float8 AS fuel_cost,
           COALESCE((SELECT SUM(cost) FROM maintenance_records), 0)::float8 AS maintenance_cost,
-          COALESCE((SELECT SUM(COALESCE(total_amount, amount + tax - discount)) FROM expenses), 0)::float8 AS total_expenses,
+          COALESCE((SELECT SUM(COALESCE(total_amount, amount + tax - discount)) FROM expenses WHERE category NOT IN ('fuel', 'maintenance')), 0)::float8 AS total_expenses,
           COALESCE((SELECT SUM(estimated_distance_km) FROM trips), 0)::float8 AS total_distance`,
       ),
       this.pool.query(`SELECT status AS label, COUNT(*)::int AS value FROM vehicles GROUP BY status ORDER BY status`),
