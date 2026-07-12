@@ -1,19 +1,41 @@
 "use client";
 
-import {
-  GithubLogo,
-  BookOpen,
-  ShieldCheck,
-  Lifebuoy,
-  Star,
-} from "@phosphor-icons/react";
+import { GithubLogo, BookOpen, ShieldCheck, Lifebuoy, InstagramLogo, TwitterLogo, YoutubeLogo } from "@phosphor-icons/react";
 
-const links = [
-  { label: "Features", href: "#features" },
-  { label: "Documentation", href: "#docs", icon: <BookOpen size={14} /> },
-  { label: "Privacy", href: "#privacy", icon: <ShieldCheck size={14} /> },
-  { label: "Support", href: "#support", icon: <Lifebuoy size={14} /> },
-  { label: "GitHub", href: "https://github.com", icon: <GithubLogo size={14} />, external: true },
+const cols = [
+  {
+    heading: "Platform",
+    links: [
+      { label: "About", href: "#" },
+      { label: "Resources", href: "#" },
+      { label: "Status", href: "#" },
+      { label: "Contact", href: "#" },
+    ],
+  },
+  {
+    heading: "Company",
+    links: [
+      { label: "About Us", href: "#" },
+      { label: "Pricing", href: "#pricing" },
+      { label: "Status", href: "#" },
+      { label: "Documentation", href: "#docs" },
+    ],
+  },
+  {
+    heading: "Resources",
+    links: [
+      { label: "Social Media", href: "#", icon: <InstagramLogo size={13} /> },
+      { label: "Terms & Conditions", href: "#", icon: <ShieldCheck size={13} /> },
+      { label: "Privacy Policy", href: "#", icon: <ShieldCheck size={13} /> },
+    ],
+  },
+];
+
+const socials = [
+  { id: "instagram", icon: <InstagramLogo size={16} />, href: "#" },
+  { id: "twitter",   icon: <TwitterLogo size={16} />,   href: "#" },
+  { id: "youtube",   icon: <YoutubeLogo size={16} />,   href: "#" },
+  { id: "github",    icon: <GithubLogo size={16} />,    href: "https://github.com" },
 ];
 
 export default function Footer() {
@@ -22,178 +44,127 @@ export default function Footer() {
   return (
     <footer
       style={{
-        background: "#0A0F1A",
-        borderTop: "1px solid #1E293B",
-        padding: "48px 24px 32px",
+        background: "#040810",
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+        padding: "60px 24px 28px",
       }}
     >
-      <div
-        style={{
-          maxWidth: "1280px",
-          margin: "0 auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: "36px",
-        }}
-      >
-        {/* Top row */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: "40px",
-            flexWrap: "wrap",
-          }}
-        >
+      <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+        {/* Top: Logo + cols + socials */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 1fr auto", gap: "48px", marginBottom: "52px", alignItems: "start" }} className="footer-grid">
           {/* Logo + tagline */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div
-                style={{
-                  width: "30px",
-                  height: "30px",
-                  borderRadius: "8px",
-                  background: "linear-gradient(135deg, #F5A623 0%, #D4891A 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "12px" }}>
+              <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: "linear-gradient(135deg, #F5A623 0%, #D4891A 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
                   <rect x="1" y="8" width="11" height="7" rx="1.5" fill="white" fillOpacity="0.95" />
                   <path d="M12 10h3.5l2.5 3v2H12V10z" fill="white" fillOpacity="0.85" />
                   <circle cx="5" cy="15.5" r="1.5" fill="#D4891A" />
                   <circle cx="14.5" cy="15.5" r="1.5" fill="#D4891A" />
                 </svg>
               </div>
-              <span style={{ fontSize: "1rem", fontWeight: 700, color: "#F1F5F9", letterSpacing: "-0.02em" }}>
-                TransitOps
-              </span>
+              <span style={{ fontSize: "0.9375rem", fontWeight: 700, color: "#F0F4FF", letterSpacing: "-0.02em" }}>TransitOps</span>
             </div>
-            <p style={{ fontSize: "0.8375rem", color: "#475569", maxWidth: "240px", lineHeight: 1.55 }}>
+            <p style={{ fontSize: "0.825rem", color: "var(--text-muted)", lineHeight: 1.6, maxWidth: "200px" }}>
               Smart transport operations platform for modern fleet management.
             </p>
-
-            {/* GitHub star button */}
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "7px",
-                background: "#1E293B",
-                border: "1px solid #334155",
-                borderRadius: "8px",
-                padding: "7px 12px",
-                fontSize: "0.8125rem",
-                color: "#94A3B8",
-                textDecoration: "none",
-                width: "fit-content",
-                transition: "border-color 160ms ease, color 160ms ease",
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLAnchorElement;
-                el.style.borderColor = "#F5A623";
-                el.style.color = "#F5A623";
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLAnchorElement;
-                el.style.borderColor = "#334155";
-                el.style.color = "#94A3B8";
-              }}
-            >
-              <GithubLogo size={14} />
-              Star on GitHub
-              <Star size={12} />
-            </a>
           </div>
 
-          {/* Navigation links */}
-          <nav
-            style={{
-              display: "flex",
-              gap: "32px",
-              flexWrap: "wrap",
-            }}
-          >
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "#475569", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "4px" }}>
-                Platform
+          {/* Link columns */}
+          {cols.map((col) => (
+            <div key={col.heading}>
+              <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "16px" }}>
+                {col.heading}
               </p>
-              {links.slice(0, 2).map((link) => (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {col.links.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    style={{ fontSize: "0.8375rem", color: "var(--text-muted)", textDecoration: "none", display: "flex", alignItems: "center", gap: "6px", transition: "color 150ms ease" }}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.5)")}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "var(--text-muted)")}
+                  >
+                    {link.icon}
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Social icons */}
+          <div>
+            <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "16px" }}>
+              Follow
+            </p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              {socials.map((s) => (
                 <a
-                  key={link.label}
-                  href={link.href}
-                  {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  key={s.id}
+                  href={s.href}
+                  id={`footer-${s.id}`}
+                  target={s.href.startsWith("http") ? "_blank" : undefined}
+                  rel="noopener noreferrer"
                   style={{
-                    fontSize: "0.875rem",
-                    color: "#64748B",
-                    textDecoration: "none",
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.07)",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px",
-                    transition: "color 160ms ease",
+                    justifyContent: "center",
+                    color: "var(--text-muted)",
+                    textDecoration: "none",
+                    transition: "color 150ms ease, border-color 150ms ease, background 150ms ease",
                   }}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#94A3B8")}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#64748B")}
+                  onMouseEnter={(e) => {
+                    const el = e.currentTarget as HTMLAnchorElement;
+                    el.style.color = "#F5A623";
+                    el.style.borderColor = "rgba(245,166,35,0.3)";
+                    el.style.background = "rgba(245,166,35,0.08)";
+                  }}
+                  onMouseLeave={(e) => {
+                    const el = e.currentTarget as HTMLAnchorElement;
+                    el.style.color = "var(--text-muted)";
+                    el.style.borderColor = "rgba(255,255,255,0.07)";
+                    el.style.background = "rgba(255,255,255,0.05)";
+                  }}
                 >
-                  {link.icon}
-                  {link.label}
+                  {s.icon}
                 </a>
               ))}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "#475569", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "4px" }}>
-                Company
-              </p>
-              {links.slice(2).map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                  style={{
-                    fontSize: "0.875rem",
-                    color: "#64748B",
-                    textDecoration: "none",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    transition: "color 160ms ease",
-                  }}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#94A3B8")}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#64748B")}
-                >
-                  {link.icon}
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          </nav>
+          </div>
         </div>
 
-        {/* Bottom row */}
-        <div
-          style={{
-            borderTop: "1px solid #1E293B",
-            paddingTop: "24px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px",
-            flexWrap: "wrap",
-          }}
-        >
-          <p style={{ fontSize: "0.8125rem", color: "#334155" }}>
+        {/* Bottom bar */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "22px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+          <p style={{ fontSize: "0.775rem", color: "rgba(255,255,255,0.15)" }}>
             &copy; {year} TransitOps. All rights reserved.
           </p>
-          <p style={{ fontSize: "0.8125rem", color: "#334155" }}>
-            Built for modern logistics teams.
-          </p>
+          <div style={{ display: "flex", gap: "20px" }}>
+            {["Privacy", "Terms", "Support", "Legal"].map((item) => (
+              <a key={item} href="#" style={{ fontSize: "0.775rem", color: "rgba(255,255,255,0.15)", textDecoration: "none", transition: "color 150ms ease" }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.4)")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.15)")}
+              >
+                {item}
+              </a>
+            ))}
+          </div>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 900px) {
+          .footer-grid { grid-template-columns: 1fr 1fr !important; gap: 32px !important; }
+        }
+        @media (max-width: 480px) {
+          .footer-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </footer>
   );
 }

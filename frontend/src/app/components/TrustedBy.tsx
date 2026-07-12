@@ -2,71 +2,41 @@
 
 import { motion, useReducedMotion } from "motion/react";
 
-// Real logistics company SVG monograms (invented brands for demo)
 const companies = [
-  {
-    id: "nexus-logistics",
-    name: "NexusLogistics",
-    svg: (
-      <svg width="90" height="28" viewBox="0 0 90 28" fill="none">
-        <text x="0" y="21" fontFamily="system-ui" fontWeight="700" fontSize="14" fill="currentColor" letterSpacing="-0.5">NexusLogistics</text>
-      </svg>
-    ),
-  },
-  {
-    id: "swift-freight",
-    name: "SwiftFreight",
-    svg: (
-      <svg width="80" height="28" viewBox="0 0 80 28" fill="none">
-        <polygon points="8,4 14,14 8,24 2,14" fill="currentColor" fillOpacity="0.8"/>
-        <text x="18" y="20" fontFamily="system-ui" fontWeight="700" fontSize="13" fill="currentColor" letterSpacing="-0.3">SwiftFreight</text>
-      </svg>
-    ),
-  },
-  {
-    id: "apex-transport",
-    name: "ApexTransport",
-    svg: (
-      <svg width="88" height="28" viewBox="0 0 88 28" fill="none">
-        <rect x="0" y="8" width="12" height="12" rx="2" fill="currentColor" fillOpacity="0.85"/>
-        <text x="16" y="20" fontFamily="system-ui" fontWeight="700" fontSize="13" fill="currentColor" letterSpacing="-0.3">ApexTransport</text>
-      </svg>
-    ),
-  },
-  {
-    id: "meridian-fleet",
-    name: "MeridianFleet",
-    svg: (
-      <svg width="85" height="28" viewBox="0 0 85 28" fill="none">
-        <circle cx="10" cy="14" r="8" stroke="currentColor" strokeWidth="2.5" fill="none"/>
-        <line x1="10" y1="6" x2="10" y2="22" stroke="currentColor" strokeWidth="2"/>
-        <text x="24" y="20" fontFamily="system-ui" fontWeight="700" fontSize="13" fill="currentColor" letterSpacing="-0.3">MeridianFleet</text>
-      </svg>
-    ),
-  },
-  {
-    id: "ironroute",
-    name: "IronRoute",
-    svg: (
-      <svg width="70" height="28" viewBox="0 0 70 28" fill="none">
-        <path d="M2 14L8 6L14 14L8 22L2 14Z" fill="currentColor" fillOpacity="0.9"/>
-        <text x="19" y="20" fontFamily="system-ui" fontWeight="700" fontSize="14" fill="currentColor" letterSpacing="-0.3">IronRoute</text>
-      </svg>
-    ),
-  },
-  {
-    id: "vantage-cargo",
-    name: "VantageCargo",
-    svg: (
-      <svg width="80" height="28" viewBox="0 0 80 28" fill="none">
-        <path d="M2 8h10l4 6-4 6H2l4-6-4-6z" fill="currentColor" fillOpacity="0.75"/>
-        <text x="18" y="20" fontFamily="system-ui" fontWeight="700" fontSize="13" fill="currentColor" letterSpacing="-0.3">VantageCargo</text>
-      </svg>
-    ),
-  },
+  { id: "nexus", name: "NexusLogistics" },
+  { id: "swift", name: "SwiftFreight" },
+  { id: "apex", name: "ApexTransport" },
+  { id: "meridian", name: "MeridianFleet" },
+  { id: "iron", name: "IronRoute" },
+  { id: "vantage", name: "VantageCargo" },
+  { id: "atlas", name: "AtlasShipping" },
+  { id: "core", name: "CoreLogix" },
 ];
 
-// Duplicate for seamless marquee
+// Simple geometric SVG monograms
+const Monogram = ({ name, id }: { name: string; id: string }) => {
+  const initial = name[0];
+  const shapes: Record<string, React.ReactNode> = {
+    nexus: <><polygon points="8,3 13,3 18,12 13,21 8,21 3,12" fill="none" stroke="currentColor" strokeWidth="1.5"/><text x="10.5" y="16" textAnchor="middle" fontSize="8" fontWeight="700" fill="currentColor">N</text></>,
+    swift: <><circle cx="10" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.5"/><text x="10" y="16" textAnchor="middle" fontSize="8" fontWeight="700" fill="currentColor">S</text></>,
+    apex: <><polygon points="10,3 18,18 2,18" fill="none" stroke="currentColor" strokeWidth="1.5"/><text x="10" y="16.5" textAnchor="middle" fontSize="7" fontWeight="700" fill="currentColor">A</text></>,
+    meridian: <><rect x="3" y="5" width="14" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5"/><text x="10" y="16" textAnchor="middle" fontSize="8" fontWeight="700" fill="currentColor">M</text></>,
+    iron: <><path d="M3 12h14M10 4v16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></>,
+    vantage: <><path d="M3 5l7 12 7-12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></>,
+    atlas: <><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" strokeWidth="1.5"/><path d="M3 10h14M10 3c-3 3-3 10 0 14M10 3c3 3 3 10 0 14" stroke="currentColor" strokeWidth="1" opacity="0.7"/></>,
+    core: <><rect x="4" y="4" width="12" height="12" rx="6" fill="none" stroke="currentColor" strokeWidth="1.5"/><rect x="7" y="7" width="6" height="6" rx="3" fill="currentColor" opacity="0.6"/></>,
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
+        {shapes[id] ?? <text x="10" y="15" textAnchor="middle" fontSize="10" fontWeight="700" fill="currentColor">{initial}</text>}
+      </svg>
+      <span style={{ fontSize: "0.8125rem", fontWeight: 700, letterSpacing: "-0.01em" }}>{name}</span>
+    </div>
+  );
+};
+
 const allCompanies = [...companies, ...companies];
 
 export default function TrustedBy() {
@@ -76,88 +46,53 @@ export default function TrustedBy() {
     <section
       id="trusted-by"
       style={{
-        padding: "60px 0",
-        borderTop: "1px solid #F1F5F9",
-        borderBottom: "1px solid #F1F5F9",
-        background: "#FAFCFF",
+        padding: "48px 0",
+        background: "var(--bg-surface)",
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
         overflow: "hidden",
       }}
     >
-      <motion.div
-        initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.4 }}
-        transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+      <motion.p
+        initial={reduceMotion ? false : { opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
         style={{
           textAlign: "center",
-          marginBottom: "36px",
-          fontSize: "0.8rem",
+          fontSize: "0.75rem",
           fontWeight: 600,
-          color: "#94A3B8",
+          color: "var(--text-muted)",
           letterSpacing: "0.12em",
           textTransform: "uppercase",
+          marginBottom: "28px",
         }}
       >
         Trusted by logistics teams worldwide
-      </motion.div>
+      </motion.p>
 
-      {/* Marquee */}
       <div style={{ position: "relative" }}>
-        {/* Fade edges */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: "120px",
-            background: "linear-gradient(to right, #FAFCFF, transparent)",
-            zIndex: 2,
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            right: 0,
-            top: 0,
-            bottom: 0,
-            width: "120px",
-            background: "linear-gradient(to left, #FAFCFF, transparent)",
-            zIndex: 2,
-            pointerEvents: "none",
-          }}
-        />
+        {/* Fade masks */}
+        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "120px", background: "linear-gradient(to right, var(--bg-surface), transparent)", zIndex: 2, pointerEvents: "none" }} />
+        <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "120px", background: "linear-gradient(to left, var(--bg-surface), transparent)", zIndex: 2, pointerEvents: "none" }} />
 
         <div
-          style={{
-            display: "flex",
-            gap: "64px",
-            alignItems: "center",
-            width: "max-content",
-          }}
+          style={{ display: "flex", gap: "56px", alignItems: "center", width: "max-content" }}
           className={reduceMotion ? "" : "animate-marquee"}
         >
           {allCompanies.map((co, i) => (
             <div
               key={`${co.id}-${i}`}
               style={{
-                color: "#CBD5E1",
-                filter: "grayscale(1)",
-                opacity: 0.7,
-                transition: "opacity 200ms ease, color 200ms ease",
+                color: "rgba(255,255,255,0.2)",
+                transition: "color 200ms ease",
                 flexShrink: 0,
+                cursor: "default",
               }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.opacity = "1";
-                (e.currentTarget as HTMLDivElement).style.color = "#94A3B8";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.opacity = "0.7";
-                (e.currentTarget as HTMLDivElement).style.color = "#CBD5E1";
-              }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.5)")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.2)")}
             >
-              {co.svg}
+              <Monogram name={co.name} id={co.id} />
             </div>
           ))}
         </div>

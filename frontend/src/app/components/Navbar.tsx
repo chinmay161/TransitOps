@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { List, X } from "@phosphor-icons/react";
+import { List, X, CaretDown } from "@phosphor-icons/react";
 
 const navLinks = [
-  { label: "Features", href: "#features" },
-  { label: "Modules", href: "#modules" },
+  { label: "Features", href: "#features", hasDropdown: true },
+  { label: "Modules", href: "#modules", hasDropdown: true },
   { label: "Analytics", href: "#stats" },
   { label: "Pricing", href: "#pricing", disabled: true },
   { label: "Documentation", href: "#docs" },
@@ -17,7 +17,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 16);
+    const handleScroll = () => setScrolled(window.scrollY > 24);
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
@@ -35,13 +35,17 @@ export default function Navbar() {
           left: 0,
           right: 0,
           zIndex: 100,
-          height: "64px",
+          height: "60px",
           display: "flex",
           alignItems: "center",
-          backgroundColor: scrolled ? "rgba(255,255,255,0.92)" : "transparent",
-          backdropFilter: scrolled ? "blur(16px)" : "none",
-          borderBottom: scrolled ? "1px solid rgba(226,232,240,0.8)" : "1px solid transparent",
-          transition: "background-color 260ms ease, border-color 260ms ease, backdrop-filter 260ms ease",
+          background: scrolled
+            ? "rgba(7, 13, 26, 0.92)"
+            : "rgba(7, 13, 26, 0.6)",
+          backdropFilter: "blur(16px)",
+          borderBottom: scrolled
+            ? "1px solid rgba(255,255,255,0.08)"
+            : "1px solid rgba(255,255,255,0.04)",
+          transition: "background 260ms ease, border-color 260ms ease",
         }}
       >
         <div
@@ -63,56 +67,40 @@ export default function Navbar() {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "10px",
+              gap: "9px",
               textDecoration: "none",
               flexShrink: 0,
             }}
           >
-            {/* Truck + Route Icon */}
             <div
               style={{
-                width: "34px",
-                height: "34px",
-                borderRadius: "9px",
+                width: "32px",
+                height: "32px",
+                borderRadius: "8px",
                 background: "linear-gradient(135deg, #F5A623 0%, #D4891A 100%)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 2px 8px rgba(245,166,35,0.35)",
+                boxShadow: "0 2px 10px rgba(245,166,35,0.35)",
                 flexShrink: 0,
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                 <rect x="1" y="8" width="11" height="7" rx="1.5" fill="white" fillOpacity="0.95" />
                 <path d="M12 10h3.5l2.5 3v2H12V10z" fill="white" fillOpacity="0.85" />
                 <circle cx="5" cy="15.5" r="1.5" fill="#D4891A" />
                 <circle cx="14.5" cy="15.5" r="1.5" fill="#D4891A" />
-                <path d="M3 8V5.5a1 1 0 011-1h5a1 1 0 011 1V8" stroke="white" strokeWidth="1.2" strokeOpacity="0.6" />
-                <circle cx="6.5" cy="4" r="1" fill="white" fillOpacity="0.7" />
               </svg>
             </div>
-            <span
-              style={{
-                fontSize: "1.0625rem",
-                fontWeight: 700,
-                color: "#0F172A",
-                letterSpacing: "-0.02em",
-              }}
-            >
+            <span style={{ fontSize: "1rem", fontWeight: 700, color: "#F0F4FF", letterSpacing: "-0.02em" }}>
               TransitOps
             </span>
           </a>
 
           {/* Desktop Nav */}
           <nav
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              flex: 1,
-              justifyContent: "center",
-            }}
-            className="hidden-mobile"
+            style={{ display: "flex", alignItems: "center", gap: "2px", flex: 1, justifyContent: "center" }}
+            className="nav-desktop"
           >
             {navLinks.map((link) => (
               <a
@@ -120,39 +108,44 @@ export default function Navbar() {
                 href={link.disabled ? undefined : link.href}
                 id={`nav-${link.label.toLowerCase()}`}
                 style={{
-                  padding: "6px 14px",
-                  borderRadius: "8px",
+                  padding: "6px 13px",
+                  borderRadius: "7px",
                   fontSize: "0.875rem",
                   fontWeight: 500,
-                  color: link.disabled ? "#CBD5E1" : "#475569",
+                  color: link.disabled ? "#2D3F5E" : "#6B7FA3",
                   textDecoration: "none",
                   cursor: link.disabled ? "not-allowed" : "pointer",
-                  transition: "color 160ms ease, background 160ms ease",
+                  transition: "color 150ms ease, background 150ms ease",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
                   whiteSpace: "nowrap",
                 }}
                 onMouseEnter={(e) => {
                   if (!link.disabled) {
-                    (e.currentTarget as HTMLAnchorElement).style.color = "#0F172A";
-                    (e.currentTarget as HTMLAnchorElement).style.background = "#F1F5F9";
+                    const el = e.currentTarget as HTMLAnchorElement;
+                    el.style.color = "#F0F4FF";
+                    el.style.background = "rgba(255,255,255,0.06)";
                   }
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.color = link.disabled ? "#CBD5E1" : "#475569";
-                  (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.color = link.disabled ? "#2D3F5E" : "#6B7FA3";
+                  el.style.background = "transparent";
                 }}
               >
                 {link.label}
+                {link.hasDropdown && <CaretDown size={12} />}
                 {link.disabled && (
                   <span
                     style={{
-                      marginLeft: "6px",
-                      fontSize: "0.65rem",
-                      fontWeight: 600,
+                      fontSize: "0.625rem",
+                      fontWeight: 700,
                       color: "#F5A623",
                       background: "rgba(245,166,35,0.12)",
                       padding: "1px 5px",
                       borderRadius: "4px",
-                      letterSpacing: "0.04em",
+                      letterSpacing: "0.05em",
                     }}
                   >
                     SOON
@@ -162,25 +155,22 @@ export default function Navbar() {
             ))}
           </nav>
 
-          {/* CTA buttons */}
-          <div
-            style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}
-            className="hidden-mobile"
-          >
+          {/* CTA row */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }} className="nav-desktop">
             <a
               href="/login"
               id="nav-login"
               style={{
                 padding: "7px 16px",
-                borderRadius: "8px",
+                borderRadius: "7px",
                 fontSize: "0.875rem",
                 fontWeight: 500,
-                color: "#475569",
+                color: "#6B7FA3",
                 textDecoration: "none",
-                transition: "color 160ms ease",
+                transition: "color 150ms ease",
               }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#0F172A")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#475569")}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#F0F4FF")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#6B7FA3")}
             >
               Login
             </a>
@@ -189,22 +179,22 @@ export default function Navbar() {
             </a>
           </div>
 
-          {/* Mobile hamburger */}
+          {/* Mobile toggle */}
           <button
             id="nav-mobile-toggle"
             onClick={() => setMobileOpen(!mobileOpen)}
+            className="nav-mobile-btn"
             style={{
               display: "none",
               background: "none",
               border: "none",
               cursor: "pointer",
+              color: "#6B7FA3",
               padding: "6px",
-              color: "#475569",
             }}
-            className="show-mobile"
             aria-label="Toggle menu"
           >
-            {mobileOpen ? <X size={22} weight="bold" /> : <List size={22} weight="bold" />}
+            {mobileOpen ? <X size={22} /> : <List size={22} />}
           </button>
         </div>
       </motion.header>
@@ -217,20 +207,20 @@ export default function Navbar() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
             style={{
               position: "fixed",
-              top: "64px",
+              top: "60px",
               left: 0,
               right: 0,
               zIndex: 99,
-              background: "rgba(255,255,255,0.97)",
-              backdropFilter: "blur(16px)",
-              borderBottom: "1px solid rgba(226,232,240,0.9)",
+              background: "rgba(7,13,26,0.97)",
+              backdropFilter: "blur(20px)",
+              borderBottom: "1px solid rgba(255,255,255,0.07)",
               padding: "16px 24px 24px",
             }}
           >
-            <nav style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "16px" }}>
+            <nav style={{ display: "flex", flexDirection: "column", gap: "2px", marginBottom: "16px" }}>
               {navLinks.map((link) => (
                 <a
                   key={link.label}
@@ -241,7 +231,7 @@ export default function Navbar() {
                     borderRadius: "8px",
                     fontSize: "0.9375rem",
                     fontWeight: 500,
-                    color: link.disabled ? "#CBD5E1" : "#334155",
+                    color: link.disabled ? "#2D3F5E" : "#6B7FA3",
                     textDecoration: "none",
                     cursor: link.disabled ? "not-allowed" : "pointer",
                   }}
@@ -251,12 +241,8 @@ export default function Navbar() {
               ))}
             </nav>
             <div style={{ display: "flex", gap: "10px" }}>
-              <a href="/login" className="btn-secondary" style={{ flex: 1, justifyContent: "center" }}>
-                Login
-              </a>
-              <a href="/dashboard" className="btn-primary" style={{ flex: 1, justifyContent: "center" }}>
-                Launch App
-              </a>
+              <a href="/login" className="btn-ghost" style={{ flex: 1, justifyContent: "center" }}>Login</a>
+              <a href="/dashboard" className="btn-primary" style={{ flex: 1, justifyContent: "center" }}>Launch App</a>
             </div>
           </motion.div>
         )}
@@ -264,11 +250,8 @@ export default function Navbar() {
 
       <style>{`
         @media (max-width: 768px) {
-          .hidden-mobile { display: none !important; }
-          .show-mobile { display: flex !important; }
-        }
-        @media (min-width: 769px) {
-          .show-mobile { display: none !important; }
+          .nav-desktop { display: none !important; }
+          .nav-mobile-btn { display: flex !important; }
         }
       `}</style>
     </>
