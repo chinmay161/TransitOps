@@ -88,6 +88,13 @@ export async function registerDispatcher(
   });
 }
 
+export async function devVerifyEmail(email: string): Promise<unknown> {
+  return request("/api/auth/dev/verify-email", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
 export async function verifyEmail(token: string): Promise<unknown> {
   return request(`/api/auth/verify-email?token=${encodeURIComponent(token)}`);
 }

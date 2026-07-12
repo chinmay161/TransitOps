@@ -171,6 +171,7 @@ async function selfRegisterAccount(params: {
 
   const passwordHash = await hashPassword(params.password);
   const { raw, hash, expiresAt } = generateVerificationToken();
+  console.log('[3] Verification token generated');
 
   const user = await repo.insertUser({
     email: params.email,
@@ -183,6 +184,8 @@ async function selfRegisterAccount(params: {
     verificationTokenHash: hash,
     verificationExpiresAt: expiresAt,
   });
+  console.log('[2] User created');
+  console.log('[4] Verification token stored');
 
   return { user, rawVerificationToken: raw };
 }
@@ -219,4 +222,17 @@ export async function registerDriver(
   });
 
   return { user: safeUser(user) };
+}
+
+export async function devVerifyEmail(email: string): Promise<void> {
+  if (process.env.NODE_ENV !== 'development') {
+    throw new AppError(403, 'FORBIDDEN', 'This endpoint is only available in development mode');
+  }
+
+  const user = await repo.findUserByEmail(email);
+  if (!user) {
+    throw new AppError(404, 'NOT_FOUND', 'User not found');
+  }
+
+  await repo.verifyUserEmail(user.id);
 }
