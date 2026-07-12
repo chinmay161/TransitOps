@@ -894,6 +894,559 @@ app.get('/api/verification/status/:driverId', (req: Request, res: Response) => {
   });
 });
 
+// GET /trips - Fetch all trips with joined driver and vehicle details
+app.get('/trips', async (req: Request, res: Response) => {
+  try {
+    const query = `
+      SELECT 
+        t.id,
+        t.driver_id,
+        t.vehicle_id,
+        t.status,
+        t.origin,
+        t.destination,
+        t.estimated_distance_km,
+        t.estimated_duration_minutes,
+        TO_CHAR(t.scheduled_start, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as scheduled_start,
+        TO_CHAR(t.scheduled_end, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as scheduled_end,
+        TO_CHAR(t.actual_start, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as actual_start,
+        TO_CHAR(t.actual_end, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as actual_end,
+        t.notes,
+        t.created_by,
+        t.updated_by,
+        t.created_at,
+        t.updated_at,
+        u.full_name as driver_name,
+        d.license_number as driver_license,
+        d.status as driver_status,
+        TO_CHAR(d.license_expiry, 'YYYY-MM-DD') as driver_license_expiry,
+        v.make as vehicle_make,
+        v.model as vehicle_model,
+        v.registration_number as vehicle_registration_number,
+        v.status as vehicle_status
+      FROM trips t
+      JOIN drivers d ON t.driver_id = d.id
+      JOIN users u ON d.user_id = u.id
+      JOIN vehicles v ON t.vehicle_id = v.id
+      ORDER BY t.scheduled_start DESC, t.created_at DESC
+    `;
+    const result = await pool.query(query);
+    const trips = result.rows.map(trip => {
+      const verified = mockDigiLockerService.isDriverVerified(trip.driver_id);
+      return {
+        ...trip,
+        driver_verified: verified
+      };
+    });
+    res.json(trips);
+  } catch (error: any) {
+    console.error('Error fetching trips:', error);
+    res.status(500).json({ error: 'Failed to fetch trips', details: error.message });
+  }
+});
+
+// GET /trips/:id - Fetch single trip with detailed driver/vehicle data
+app.get('/trips/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const query = `
+      SELECT 
+        t.id,
+        t.driver_id,
+        t.vehicle_id,
+        t.status,
+        t.origin,
+        t.destination,
+        t.estimated_distance_km,
+        t.estimated_duration_minutes,
+        TO_CHAR(t.scheduled_start, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as scheduled_start,
+        TO_CHAR(t.scheduled_end, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as scheduled_end,
+        TO_CHAR(t.actual_start, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as actual_start,
+        TO_CHAR(t.actual_end, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as actual_end,
+        t.notes,
+        t.created_by,
+        t.updated_by,
+        t.created_at,
+        t.updated_at,
+        u.full_name as driver_name,
+        d.license_number as driver_license,
+        d.status as driver_status,
+        TO_CHAR(d.license_expiry, 'YYYY-MM-DD') as driver_license_expiry,
+        v.make as vehicle_make,
+        v.model as vehicle_model,
+        v.registration_number as vehicle_registration_number,
+        v.status as vehicle_status
+      FROM trips t
+      JOIN drivers d ON t.driver_id = d.id
+      JOIN users u ON d.user_id = u.id
+      JOIN vehicles v ON t.vehicle_id = v.id
+      WHERE t.id = $1
+    `;
+    const result = await pool.query(query, [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+    const trip = result.rows[0];
+    const verified = mockDigiLockerService.isDriverVerified(trip.driver_id);
+    res.json({
+      ...trip,
+      driver_verified: verified
+    });
+  } catch (error: any) {
+    console.error('Error fetching trip details:', error);
+    res.status(500).json({ error: 'Failed to fetch trip details', details: error.message });
+  }
+});
+
+// POST /trips - Create scheduled trip with validations
+app.post('/trips', async (req: Request, res: Response) => {
+  const {
+    driver_id,
+    vehicle_id,
+    origin,
+    destination,
+    estimated_distance_km,
+    estimated_duration_minutes,
+    scheduled_start,
+    scheduled_end,
+    notes
+  } = req.body;
+
+  if (!driver_id || !vehicle_id || !origin || !destination || !scheduled_start || !scheduled_end) {
+    return res.status(400).json({ error: 'Missing required trip fields.' });
+  }
+
+  if (estimated_distance_km !== undefined && estimated_distance_km !== null && Number(estimated_distance_km) < 0) {
+    return res.status(400).json({ error: 'Estimated distance cannot be negative.' });
+  }
+  if (estimated_duration_minutes !== undefined && estimated_duration_minutes !== null && Number(estimated_duration_minutes) < 0) {
+    return res.status(400).json({ error: 'Estimated duration cannot be negative.' });
+  }
+
+  if (new Date(scheduled_end) <= new Date(scheduled_start)) {
+    return res.status(400).json({ error: 'Scheduled end time must be after scheduled start time.' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Validate Driver via existing verification service and attributes
+    const driverQuery = `
+      SELECT d.status, d.license_expiry, u.full_name
+      FROM drivers d
+      JOIN users u ON d.user_id = u.id
+      WHERE d.id = $1
+    `;
+    const driverRes = await client.query(driverQuery, [driver_id]);
+    if (driverRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Driver profile not found.' });
+    }
+    const driverInfo = driverRes.rows[0];
+
+    const isVerified = mockDigiLockerService.isDriverVerified(driver_id);
+    if (!isVerified) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Driver driving license is unverified. Verification is mandatory.' });
+    }
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (new Date(driverInfo.license_expiry) < today) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Driver license has expired.' });
+    }
+
+    if (driverInfo.status !== 'available') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: `Driver is currently ${driverInfo.status} (expected available).` });
+    }
+
+    const activeDriverTripsQuery = `SELECT id FROM trips WHERE driver_id = $1 AND status IN ('scheduled', 'in_progress')`;
+    const activeDriverTrips = await client.query(activeDriverTripsQuery, [driver_id]);
+    if (activeDriverTrips.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Driver is already assigned to another active trip.' });
+    }
+
+    // 2. Validate Vehicle
+    const vehicleQuery = `SELECT status FROM vehicles WHERE id = $1`;
+    const vehicleRes = await client.query(vehicleQuery, [vehicle_id]);
+    if (vehicleRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Vehicle not found.' });
+    }
+    const vehicleInfo = vehicleRes.rows[0];
+
+    if (vehicleInfo.status !== 'available') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: `Vehicle is currently in ${vehicleInfo.status} status (expected available).` });
+    }
+
+    const activeVehicleTripsQuery = `SELECT id FROM trips WHERE vehicle_id = $1 AND status IN ('scheduled', 'in_progress')`;
+    const activeVehicleTrips = await client.query(activeVehicleTripsQuery, [vehicle_id]);
+    if (activeVehicleTrips.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Vehicle is already assigned to another active trip.' });
+    }
+
+    // Insert trip
+    const insertQuery = `
+      INSERT INTO trips (driver_id, vehicle_id, status, origin, destination, estimated_distance_km, estimated_duration_minutes, scheduled_start, scheduled_end, notes)
+      VALUES ($1, $2, 'scheduled', $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id, driver_id, vehicle_id, status, origin, destination, estimated_distance_km, estimated_duration_minutes, TO_CHAR(scheduled_start, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as scheduled_start, TO_CHAR(scheduled_end, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as scheduled_end, notes, created_at, updated_at
+    `;
+    const insertRes = await client.query(insertQuery, [
+      driver_id,
+      vehicle_id,
+      origin.trim(),
+      destination.trim(),
+      estimated_distance_km !== undefined && estimated_distance_km !== null ? Number(estimated_distance_km) : null,
+      estimated_duration_minutes !== undefined && estimated_duration_minutes !== null ? Number(estimated_duration_minutes) : null,
+      scheduled_start,
+      scheduled_end,
+      notes || null
+    ]);
+
+    await client.query('COMMIT');
+    res.status(201).json(insertRes.rows[0]);
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    console.error('Error creating trip:', error);
+    res.status(500).json({ error: 'Failed to create trip', details: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+// PUT /trips/:id - Edit scheduled trip details
+app.put('/trips/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const {
+    driver_id,
+    vehicle_id,
+    origin,
+    destination,
+    estimated_distance_km,
+    estimated_duration_minutes,
+    scheduled_start,
+    scheduled_end,
+    notes,
+    status
+  } = req.body;
+
+  if (estimated_distance_km !== undefined && estimated_distance_km !== null && Number(estimated_distance_km) < 0) {
+    return res.status(400).json({ error: 'Estimated distance cannot be negative.' });
+  }
+  if (estimated_duration_minutes !== undefined && estimated_duration_minutes !== null && Number(estimated_duration_minutes) < 0) {
+    return res.status(400).json({ error: 'Estimated duration cannot be negative.' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const getTripQuery = 'SELECT * FROM trips WHERE id = $1';
+    const tripRes = await client.query(getTripQuery, [id]);
+    if (tripRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Trip not found.' });
+    }
+    const currentTrip = tripRes.rows[0];
+
+    if (currentTrip.status === 'completed' || currentTrip.status === 'cancelled') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Completed or cancelled trips are read-only.' });
+    }
+
+    const startCheck = scheduled_start || currentTrip.scheduled_start;
+    const endCheck = scheduled_end || currentTrip.scheduled_end;
+    if (new Date(endCheck) <= new Date(startCheck)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Scheduled end time must be after scheduled start time.' });
+    }
+
+    // Driver validation if changed
+    if (driver_id && driver_id !== currentTrip.driver_id) {
+      const driverQuery = 'SELECT status, license_expiry FROM drivers WHERE id = $1';
+      const driverRes = await client.query(driverQuery, [driver_id]);
+      if (driverRes.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Driver profile not found.' });
+      }
+      const driverInfo = driverRes.rows[0];
+
+      const isVerified = mockDigiLockerService.isDriverVerified(driver_id);
+      if (!isVerified) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'New driver is not verified.' });
+      }
+
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      if (new Date(driverInfo.license_expiry) < today) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'New driver license has expired.' });
+      }
+
+      if (driverInfo.status !== 'available') {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'New driver is currently unavailable.' });
+      }
+
+      const activeDriverTripsQuery = `SELECT id FROM trips WHERE driver_id = $1 AND id != $2 AND status IN ('scheduled', 'in_progress')`;
+      const activeDriverTrips = await client.query(activeDriverTripsQuery, [driver_id, id]);
+      if (activeDriverTrips.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'New driver is already assigned to another active trip.' });
+      }
+    }
+
+    // Vehicle validation if changed
+    if (vehicle_id && vehicle_id !== currentTrip.vehicle_id) {
+      const vehicleQuery = 'SELECT status FROM vehicles WHERE id = $1';
+      const vehicleRes = await client.query(vehicleQuery, [vehicle_id]);
+      if (vehicleRes.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Vehicle not found.' });
+      }
+      const vehicleInfo = vehicleRes.rows[0];
+
+      if (vehicleInfo.status !== 'available') {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'New vehicle is currently unavailable.' });
+      }
+
+      const activeVehicleTripsQuery = `SELECT id FROM trips WHERE vehicle_id = $1 AND id != $2 AND status IN ('scheduled', 'in_progress')`;
+      const activeVehicleTrips = await client.query(activeVehicleTripsQuery, [vehicle_id, id]);
+      if (activeVehicleTrips.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'New vehicle is already assigned to another active trip.' });
+      }
+    }
+
+    const updateQuery = `
+      UPDATE trips
+      SET
+        driver_id = COALESCE($1, driver_id),
+        vehicle_id = COALESCE($2, vehicle_id),
+        origin = COALESCE($3, origin),
+        destination = COALESCE($4, destination),
+        estimated_distance_km = COALESCE($5, estimated_distance_km),
+        estimated_duration_minutes = COALESCE($6, estimated_duration_minutes),
+        scheduled_start = COALESCE($7, scheduled_start),
+        scheduled_end = COALESCE($8, scheduled_end),
+        notes = COALESCE($9, notes),
+        status = COALESCE($10, status),
+        updated_at = NOW()
+      WHERE id = $11
+    `;
+    await client.query(updateQuery, [
+      driver_id || null,
+      vehicle_id || null,
+      origin ? origin.trim() : null,
+      destination ? destination.trim() : null,
+      estimated_distance_km !== undefined && estimated_distance_km !== null ? Number(estimated_distance_km) : null,
+      estimated_duration_minutes !== undefined && estimated_duration_minutes !== null ? Number(estimated_duration_minutes) : null,
+      scheduled_start || null,
+      scheduled_end || null,
+      notes || null,
+      status || null,
+      id
+    ]);
+
+    await client.query('COMMIT');
+    
+    const finalQuery = `
+      SELECT 
+        t.id, t.driver_id, t.vehicle_id, t.status, t.origin, t.destination,
+        t.estimated_distance_km, t.estimated_duration_minutes,
+        TO_CHAR(t.scheduled_start, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as scheduled_start,
+        TO_CHAR(t.scheduled_end, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as scheduled_end,
+        notes, created_at, updated_at
+      FROM trips t
+      WHERE t.id = $1
+    `;
+    const finalRes = await pool.query(finalQuery, [id]);
+    res.json(finalRes.rows[0]);
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    console.error('Error updating trip:', error);
+    res.status(500).json({ error: 'Failed to update trip', details: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+// PATCH /trips/:id/start - Dispatch / Start the trip
+app.patch('/trips/:id/start', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const getTripQuery = 'SELECT driver_id, vehicle_id, status FROM trips WHERE id = $1';
+    const tripRes = await client.query(getTripQuery, [id]);
+    if (tripRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Trip not found.' });
+    }
+    const { driver_id, vehicle_id, status } = tripRes.rows[0];
+
+    if (status !== 'scheduled') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: `Cannot start a trip that is in ${status} status.` });
+    }
+
+    // Verify driver and vehicle statuses are available
+    const driverQuery = 'SELECT status FROM drivers WHERE id = $1';
+    const driverRes = await client.query(driverQuery, [driver_id]);
+    if (driverRes.rows[0].status !== 'available') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Driver is no longer available.' });
+    }
+
+    const vehicleQuery = 'SELECT status FROM vehicles WHERE id = $1';
+    const vehicleRes = await client.query(vehicleQuery, [vehicle_id]);
+    if (vehicleRes.rows[0].status !== 'available') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Vehicle is no longer available.' });
+    }
+
+    // Update statuses
+    await client.query("UPDATE drivers SET status = 'on_trip', updated_at = NOW() WHERE id = $1", [driver_id]);
+    await client.query("UPDATE vehicles SET status = 'assigned', updated_at = NOW() WHERE id = $1", [vehicle_id]);
+    await client.query("UPDATE trips SET status = 'in_progress', actual_start = NOW(), updated_at = NOW() WHERE id = $1", [id]);
+
+    await client.query('COMMIT');
+    res.json({ success: true, message: 'Trip successfully dispatched.' });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    console.error('Error starting trip:', error);
+    res.status(500).json({ error: 'Failed to start trip', details: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+// PATCH /trips/:id/complete - Complete the trip
+app.patch('/trips/:id/complete', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { final_odometer } = req.body;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const getTripQuery = 'SELECT driver_id, vehicle_id, status FROM trips WHERE id = $1';
+    const tripRes = await client.query(getTripQuery, [id]);
+    if (tripRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Trip not found.' });
+    }
+    const { driver_id, vehicle_id, status } = tripRes.rows[0];
+
+    if (status !== 'in_progress') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: `Only in-progress trips can be completed.` });
+    }
+
+    if (final_odometer !== undefined && final_odometer !== null) {
+      const getOdoQuery = 'SELECT current_odometer FROM vehicles WHERE id = $1';
+      const odoRes = await client.query(getOdoQuery, [vehicle_id]);
+      const prevOdo = Number(odoRes.rows[0].current_odometer);
+      if (Number(final_odometer) < prevOdo) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: `Final odometer (${final_odometer}) cannot be lower than the previous odometer (${prevOdo}).` });
+      }
+      await client.query("UPDATE vehicles SET current_odometer = $1 WHERE id = $2", [Number(final_odometer), vehicle_id]);
+    }
+
+    // Set statuses back to available
+    await client.query("UPDATE drivers SET status = 'available', updated_at = NOW() WHERE id = $1", [driver_id]);
+    await client.query("UPDATE vehicles SET status = 'available', updated_at = NOW() WHERE id = $1", [vehicle_id]);
+    await client.query("UPDATE trips SET status = 'completed', actual_end = NOW(), updated_at = NOW() WHERE id = $1", [id]);
+
+    await client.query('COMMIT');
+    res.json({ success: true, message: 'Trip successfully completed.' });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    console.error('Error completing trip:', error);
+    res.status(500).json({ error: 'Failed to complete trip', details: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+// PATCH /trips/:id/cancel - Cancel the trip
+app.patch('/trips/:id/cancel', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const getTripQuery = 'SELECT driver_id, vehicle_id, status FROM trips WHERE id = $1';
+    const tripRes = await client.query(getTripQuery, [id]);
+    if (tripRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Trip not found.' });
+    }
+    const { driver_id, vehicle_id, status } = tripRes.rows[0];
+
+    if (status === 'completed' || status === 'cancelled') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: `Completed or already cancelled trips cannot be cancelled.` });
+    }
+
+    // Set statuses back to available
+    await client.query("UPDATE drivers SET status = 'available', updated_at = NOW() WHERE id = $1", [driver_id]);
+    await client.query("UPDATE vehicles SET status = 'available', updated_at = NOW() WHERE id = $1", [vehicle_id]);
+    await client.query("UPDATE trips SET status = 'cancelled', updated_at = NOW() WHERE id = $1", [id]);
+
+    await client.query('COMMIT');
+    res.json({ success: true, message: 'Trip successfully cancelled.' });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    console.error('Error cancelling trip:', error);
+    res.status(500).json({ error: 'Failed to cancel trip', details: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+// DELETE /trips/:id - Delete a scheduled or cancelled trip record
+app.delete('/trips/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const getTripQuery = 'SELECT status FROM trips WHERE id = $1';
+    const tripRes = await client.query(getTripQuery, [id]);
+    if (tripRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Trip not found.' });
+    }
+    const { status } = tripRes.rows[0];
+
+    if (status === 'in_progress') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Cannot delete an in-progress trip. Cancel it first.' });
+    }
+
+    await client.query('DELETE FROM trips WHERE id = $1', [id]);
+
+    await client.query('COMMIT');
+    res.json({ success: true, message: 'Trip deleted successfully.' });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting trip:', error);
+    res.status(500).json({ error: 'Failed to delete trip', details: error.message });
+  } finally {
+    client.release();
+  }
+});
+
 app.use("/api/fuel-logs", createFuelLogRouter(fuelLogController));
 
 app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
