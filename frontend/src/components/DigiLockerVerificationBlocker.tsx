@@ -71,7 +71,7 @@ export function DigiLockerModal({
     await new Promise((r) => setTimeout(r, 500));
 
     try {
-      const res = await fetch(`${API_BASE_URL}/verification/verify`, {
+      const res = await fetch(`${API_BASE_URL}/api/verification/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -80,10 +80,14 @@ export function DigiLockerModal({
         })
       });
       
-      const resData = await res.json();
+      const resData = await res.json().catch(() => ({}));
       
       if (!res.ok) {
-        throw new Error(resData.error || resData.message || "Verification failed");
+        const message =
+          resData.message ||
+          (typeof resData.error === "string" ? resData.error : resData.error?.message) ||
+          `Verification failed with status ${res.status}`;
+        throw new Error(message);
       }
       
       setVerifiedData(resData.data);
