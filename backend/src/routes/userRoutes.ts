@@ -20,7 +20,7 @@ router.get(
         phone, 
         email_verified, 
         is_active, 
-        approval_status, 
+        'approved'::text AS approval_status,
         created_at, 
         last_login
       FROM users
