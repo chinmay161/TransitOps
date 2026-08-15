@@ -218,8 +218,8 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
         title={mode === "edit" ? "Edit Fuel Log" : "Create Fuel Log"}
         subtitle="Preparing the fuel entry form and loading live vehicle, driver, trip, and station data."
       >
-        <div className="flex min-h-[320px] items-center justify-center rounded-[28px] border border-slate-200 bg-white">
-          <SpinnerGap size={32} className="animate-spin text-amber-500" />
+        <div className="flex min-h-[320px] items-center justify-center rounded-[28px] border border-white/8 bg-[#0D1526]">
+          <SpinnerGap size={32} className="animate-spin text-[#F5A623]" />
         </div>
       </FuelLogShell>
     );
@@ -231,7 +231,7 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
       subtitle="Capture station details, auto-calculate cost, validate odometer progression, and keep the user in control if automatic fuel pricing is unavailable."
       actions={
         <>
-          <Link href={mode === "edit" && initialLog ? `/fuel-log/${initialLog.id}` : "/fuel-log"} className="btn-secondary">
+          <Link href={mode === "edit" && initialLog ? `/fuel-log/${initialLog.id}` : "/fuel-log"} className="btn-ghost">
             <ArrowLeft size={18} />
             Back
           </Link>
@@ -240,14 +240,14 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
     >
       <form onSubmit={onSubmit} className="grid gap-6">
         <section className="grid gap-6 lg:grid-cols-[1.4fr,0.8fr]">
-          <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold tracking-[-0.03em] text-slate-900">Fuel Entry Form</h2>
+          <div className="rounded-[28px] border border-white/8 bg-[#0D1526] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.24)]">
+            <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#F0F4FF]">Fuel Entry Form</h2>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Vehicle</span>
                 <select
                   {...register("vehicle_id", { required: "Vehicle is required." })}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none"
                 >
                   <option value="">Select vehicle</option>
                   {metadata?.vehicles.map((vehicle) => (
@@ -259,11 +259,11 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                 {errors.vehicle_id ? <p className="text-xs text-rose-600">{errors.vehicle_id.message}</p> : null}
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Driver</span>
                 <select
                   {...register("driver_id", { required: "Driver is required." })}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none"
                 >
                   <option value="">Select driver</option>
                   {metadata?.drivers.map((driver) => (
@@ -275,9 +275,9 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                 {errors.driver_id ? <p className="text-xs text-rose-600">{errors.driver_id.message}</p> : null}
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600 md:col-span-2">
+              <label className="space-y-2 text-sm text-[#6B7FA3] md:col-span-2">
                 <span>Trip (optional)</span>
-                <select {...register("trip_id")} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none">
+                <select {...register("trip_id")} className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none">
                   <option value="">No trip selected</option>
                   {availableTrips.map((trip) => (
                     <option key={trip.id} value={trip.id}>
@@ -293,7 +293,7 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                     type="button"
                     onClick={() => setStationMode("search")}
                     className={`rounded-full px-4 py-2 text-sm font-medium ${
-                      stationMode === "search" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"
+                      stationMode === "search" ? "bg-[#F5A623] text-[#0D0D0D]" : "bg-white/[0.06] text-[#C7D2E6]"
                     }`}
                   >
                     Search Fuel Station
@@ -302,7 +302,7 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                     type="button"
                     onClick={() => setStationMode("manual")}
                     className={`rounded-full px-4 py-2 text-sm font-medium ${
-                      stationMode === "manual" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"
+                      stationMode === "manual" ? "bg-[#F5A623] text-[#0D0D0D]" : "bg-white/[0.06] text-[#C7D2E6]"
                     }`}
                   >
                     Manual Entry
@@ -311,17 +311,17 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
               </div>
 
               {stationMode === "search" ? (
-                <div className="md:col-span-2 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                <div className="md:col-span-2 rounded-3xl border border-white/8 bg-[#111E35] p-4">
                   <div className="flex flex-col gap-3">
                     <input
                       value={stationSearch}
                       onChange={(event) => setStationSearch(event.target.value)}
                       placeholder="Search from previously used fuel stations"
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none"
+                      className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none placeholder:text-[#3A4F73]"
                     />
-                    <div className="max-h-48 overflow-y-auto rounded-2xl border border-slate-200 bg-white">
+                    <div className="max-h-48 overflow-y-auto rounded-2xl border border-white/8 bg-[#070D1A]">
                       {stationSuggestions.length === 0 ? (
-                        <p className="px-4 py-4 text-sm text-slate-500">No matching stations yet. Switch to manual entry to add a new one.</p>
+                        <p className="px-4 py-4 text-sm text-[#6B7FA3]">No matching stations yet. Switch to manual entry to add a new one.</p>
                       ) : (
                         stationSuggestions.map((station) => (
                           <button
@@ -336,15 +336,15 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                               setValue("longitude", station.longitude !== null ? String(station.longitude) : "");
                               setStationSearch(station.fuel_station_name);
                             }}
-                            className="block w-full border-b border-slate-100 px-4 py-3 text-left text-sm last:border-b-0 hover:bg-amber-50"
+                            className="block w-full border-b border-white/6 px-4 py-3 text-left text-sm last:border-b-0 hover:bg-white/[0.04]"
                           >
-                            <div className="font-medium text-slate-900">{station.fuel_station_name}</div>
-                            <div className="text-slate-500">{[station.city, station.state].filter(Boolean).join(", ")}</div>
+                            <div className="font-medium text-[#F0F4FF]">{station.fuel_station_name}</div>
+                            <div className="text-[#6B7FA3]">{[station.city, station.state].filter(Boolean).join(", ")}</div>
                           </button>
                         ))
                       )}
                     </div>
-                    <button type="button" onClick={useCurrentLocation} className="btn-secondary w-fit">
+                    <button type="button" onClick={useCurrentLocation} className="btn-ghost w-fit">
                       <MapPin size={18} />
                       Use Browser Geolocation
                     </button>
@@ -352,43 +352,43 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                 </div>
               ) : null}
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Fuel Station Name</span>
                 <input
                   {...register("fuel_station_name", { required: "Fuel station name is required." })}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none"
                 />
                 {errors.fuel_station_name ? <p className="text-xs text-rose-600">{errors.fuel_station_name.message}</p> : null}
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Fuel Station Address</span>
-                <input {...register("fuel_station_address")} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none" />
+                <input {...register("fuel_station_address")} className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none" />
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>City</span>
-                <input {...register("city")} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none" />
+                <input {...register("city")} className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none" />
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>State</span>
-                <input {...register("state")} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none" />
+                <input {...register("state")} className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none" />
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Latitude</span>
-                <input {...register("latitude")} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none" />
+                <input {...register("latitude")} className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none" />
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Longitude</span>
-                <input {...register("longitude")} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none" />
+                <input {...register("longitude")} className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none" />
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Fuel Type</span>
-                <select {...register("fuel_type")} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none">
+                <select {...register("fuel_type")} className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none">
                   {metadata?.fuel_types.map((item) => (
                     <option key={item} value={item}>
                       {item}
@@ -397,9 +397,9 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                 </select>
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Unit</span>
-                <select {...register("unit")} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none">
+                <select {...register("unit")} className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none">
                   {metadata?.units.map((item) => (
                     <option key={item} value={item}>
                       {item}
@@ -408,7 +408,7 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                 </select>
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Quantity</span>
                 <input
                   type="number"
@@ -418,15 +418,15 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                     min: { value: 0.01, message: "Quantity must be greater than 0." },
                     valueAsNumber: true,
                   })}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none"
                 />
                 {errors.quantity ? <p className="text-xs text-rose-600">{errors.quantity.message}</p> : null}
               </label>
 
-              <div className="space-y-2 text-sm text-slate-600">
+              <div className="space-y-2 text-sm text-[#6B7FA3]">
                 <div className="flex items-center justify-between gap-3">
                   <span>Price Per Unit</span>
-                  <button type="button" onClick={() => void fetchSuggestedPrice()} className="text-xs font-semibold text-amber-700">
+                  <button type="button" onClick={() => void fetchSuggestedPrice()} className="text-xs font-semibold text-[#F5A623]">
                     Fetch suggested price
                   </button>
                 </div>
@@ -438,13 +438,13 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                     min: { value: 0.01, message: "Price per unit must be greater than 0." },
                     valueAsNumber: true,
                   })}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none"
                 />
-                {priceStatus ? <p className="text-xs text-slate-500">{priceStatus}</p> : null}
+                {priceStatus ? <p className="text-xs text-[#6B7FA3]">{priceStatus}</p> : null}
                 {errors.price_per_unit ? <p className="text-xs text-rose-600">{errors.price_per_unit.message}</p> : null}
               </div>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Total Cost</span>
                 <input
                   type="number"
@@ -454,19 +454,19 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                     min: { value: 0.01, message: "Total cost must be greater than 0." },
                     valueAsNumber: true,
                   })}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none"
                 />
                 {errors.total_cost ? <p className="text-xs text-rose-600">{errors.total_cost.message}</p> : null}
               </label>
 
-              <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 md:col-span-2">
+              <label className="flex items-center gap-3 rounded-2xl border border-white/8 bg-[#111E35] px-4 py-3 text-sm text-[#C7D2E6] md:col-span-2">
                 <input type="checkbox" {...register("total_cost_override")} className="size-4" />
                 Allow manual total cost override
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Currency</span>
-                <select {...register("currency")} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none">
+                <select {...register("currency")} className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none">
                   {metadata?.currencies.map((currency) => (
                     <option key={currency} value={currency}>
                       {currency}
@@ -475,9 +475,9 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                 </select>
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Payment Method</span>
-                <select {...register("payment_method")} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none">
+                <select {...register("payment_method")} className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none">
                   {metadata?.payment_methods.map((method) => (
                     <option key={method} value={method}>
                       {method.replace("_", " ")}
@@ -486,7 +486,7 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                 </select>
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Odometer</span>
                 <input
                   type="number"
@@ -496,27 +496,27 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                     min: { value: 0, message: "Odometer must be a valid non-negative value." },
                     valueAsNumber: true,
                   })}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none"
                 />
                 {errors.odometer ? <p className="text-xs text-rose-600">{errors.odometer.message}</p> : null}
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Filled At</span>
                 <input
                   type="datetime-local"
                   {...register("filled_at", { required: "Filled date is required." })}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none"
                 />
                 {errors.filled_at ? <p className="text-xs text-rose-600">{errors.filled_at.message}</p> : null}
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Receipt Number</span>
-                <input {...register("receipt_number")} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none" />
+                <input {...register("receipt_number")} className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none" />
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600">
+              <label className="space-y-2 text-sm text-[#6B7FA3]">
                 <span>Receipt Image</span>
                 <input
                   type="file"
@@ -528,52 +528,52 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
                       .then((result) => setValue("receipt_image", result))
                       .catch((error: Error) => pushToast(error.message, "error"));
                   }}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-[#F5A623] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#0D0D0D]"
                 />
               </label>
 
-              <label className="space-y-2 text-sm text-slate-600 md:col-span-2">
+              <label className="space-y-2 text-sm text-[#6B7FA3] md:col-span-2">
                 <span>Remarks</span>
                 <textarea
                   {...register("remarks")}
                   rows={4}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-white/8 bg-[#070D1A] px-3 py-3 text-sm text-[#F0F4FF] outline-none"
                 />
               </label>
             </div>
           </div>
 
           <aside className="grid gap-6">
-            <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-semibold tracking-[-0.03em] text-slate-900">Live Summary</h2>
-              <div className="mt-4 space-y-4 text-sm text-slate-600">
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Auto Total</div>
-                  <div className="mt-2 text-2xl font-semibold text-slate-900">
+            <div className="rounded-[28px] border border-white/8 bg-[#0D1526] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.24)]">
+              <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#F0F4FF]">Live Summary</h2>
+              <div className="mt-4 space-y-4 text-sm text-[#C7D2E6]">
+                <div className="rounded-2xl border border-white/6 bg-[#111E35] p-4">
+                  <div className="text-xs uppercase tracking-[0.18em] text-[#6B7FA3]">Auto Total</div>
+                  <div className="mt-2 text-2xl font-semibold text-[#F5A623]">
                     {Number(quantity || 0) * Number(pricePerUnit || 0) || 0} INR
                   </div>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Selected Vehicle</div>
-                  <div className="mt-2 font-medium text-slate-900">
+                <div className="rounded-2xl border border-white/6 bg-[#111E35] p-4">
+                  <div className="text-xs uppercase tracking-[0.18em] text-[#6B7FA3]">Selected Vehicle</div>
+                  <div className="mt-2 font-medium text-[#F0F4FF]">
                     {metadata?.vehicles.find((item) => item.id === selectedVehicleId)?.registration_number || "Not selected"}
                   </div>
-                  <div className="text-slate-500">
+                  <div className="text-[#6B7FA3]">
                     Current odometer: {metadata?.vehicles.find((item) => item.id === selectedVehicleId)?.current_odometer ?? "-"}
                   </div>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Selected Driver</div>
-                  <div className="mt-2 font-medium text-slate-900">
+                <div className="rounded-2xl border border-white/6 bg-[#111E35] p-4">
+                  <div className="text-xs uppercase tracking-[0.18em] text-[#6B7FA3]">Selected Driver</div>
+                  <div className="mt-2 font-medium text-[#F0F4FF]">
                     {metadata?.drivers.find((item) => item.id === selectedDriverId)?.driver_name || "Not selected"}
                   </div>
-                  <div className="text-slate-500">
+                  <div className="text-[#6B7FA3]">
                     Status: {metadata?.drivers.find((item) => item.id === selectedDriverId)?.status || "-"}
                   </div>
                 </div>
                 {watch("receipt_image") ? (
-                  <div className="rounded-2xl bg-slate-50 p-4">
-                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Receipt Preview</div>
+                  <div className="rounded-2xl border border-white/6 bg-[#111E35] p-4">
+                    <div className="text-xs uppercase tracking-[0.18em] text-[#6B7FA3]">Receipt Preview</div>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={watch("receipt_image")} alt="Receipt preview" className="mt-3 max-h-64 w-full rounded-2xl object-cover" />
                   </div>
@@ -581,9 +581,9 @@ export function FuelLogFormPage({ mode, fuelLogId }: { mode: "create" | "edit"; 
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-900">Submission</h2>
-              <p className="mt-2 text-sm text-slate-600">
+            <div className="rounded-[28px] border border-white/8 bg-[#0D1526] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.24)]">
+              <h2 className="text-lg font-semibold text-[#F0F4FF]">Submission</h2>
+              <p className="mt-2 text-sm text-[#6B7FA3]">
                 The backend validates active vehicle and driver status, optional trip compatibility, positive values, valid dates, and odometer progression before saving.
               </p>
               <button type="submit" disabled={submitting} className="btn-primary mt-5 w-full justify-center disabled:cursor-not-allowed disabled:opacity-60">

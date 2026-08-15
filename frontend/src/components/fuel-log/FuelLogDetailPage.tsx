@@ -55,7 +55,7 @@ export function FuelLogDetailPage({ fuelLogId }: { fuelLogId: string }) {
       subtitle="Review the complete station, vehicle, driver, trip, odometer, and receipt context for this fuel event."
       actions={
         <>
-          <Link href="/fuel-log" className="btn-secondary">
+          <Link href="/fuel-log" className="btn-ghost">
             <ArrowLeft size={18} />
             Back to List
           </Link>
@@ -67,23 +67,23 @@ export function FuelLogDetailPage({ fuelLogId }: { fuelLogId: string }) {
       }
     >
       {loading ? (
-        <div className="flex min-h-[320px] items-center justify-center rounded-[28px] border border-slate-200 bg-white">
-          <SpinnerGap size={32} className="animate-spin text-amber-500" />
+        <div className="flex min-h-[320px] items-center justify-center rounded-[28px] border border-white/8 bg-[#0D1526]">
+          <SpinnerGap size={32} className="animate-spin text-[#F5A623]" />
         </div>
       ) : !log ? (
-        <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-center text-slate-600">Fuel log not found.</div>
+        <div className="rounded-[28px] border border-white/8 bg-[#0D1526] p-8 text-center text-[#6B7FA3]">Fuel log not found.</div>
       ) : (
         <section className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
-          <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-[28px] border border-white/8 bg-[#0D1526] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.24)]">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Station</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-900">{log.fuel_station_name}</h2>
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="text-xs uppercase tracking-[0.2em] text-[#6B7FA3]">Station</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[#F0F4FF]">{log.fuel_station_name}</h2>
+                <p className="mt-2 text-sm text-[#6B7FA3]">
                   {[log.fuel_station_address, log.city, log.state].filter(Boolean).join(", ") || "Manual location only"}
                 </p>
               </div>
-              <button onClick={() => setShowDelete(true)} className="btn-secondary text-rose-700">
+              <button onClick={() => setShowDelete(true)} className="btn-ghost text-[#FCA5A5]">
                 <Trash size={18} />
                 Delete
               </button>
@@ -104,41 +104,41 @@ export function FuelLogDetailPage({ fuelLogId }: { fuelLogId: string }) {
                 ["Receipt Number", log.receipt_number || "Not provided"],
                 ["Coordinates", log.latitude !== null && log.longitude !== null ? `${log.latitude}, ${log.longitude}` : "Not captured"],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</div>
-                  <div className="mt-2 font-medium capitalize text-slate-900">{value}</div>
+                <div key={label} className="rounded-2xl border border-white/6 bg-[#111E35] p-4">
+                  <div className="text-xs uppercase tracking-[0.18em] text-[#6B7FA3]">{label}</div>
+                  <div className="mt-2 font-medium capitalize text-[#F0F4FF]">{value}</div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-6 rounded-2xl bg-slate-50 p-4">
-              <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Remarks</div>
-              <p className="mt-2 text-sm text-slate-700">{log.remarks || "No remarks added."}</p>
+            <div className="mt-6 rounded-2xl border border-white/6 bg-[#111E35] p-4">
+              <div className="text-xs uppercase tracking-[0.18em] text-[#6B7FA3]">Remarks</div>
+              <p className="mt-2 text-sm text-[#C7D2E6]">{log.remarks || "No remarks added."}</p>
             </div>
           </div>
 
           <aside className="grid gap-6">
-            <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-slate-900">Analytics Ready Snapshot</h3>
-              <div className="mt-4 space-y-4 text-sm text-slate-600">
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Vehicle Status</div>
-                  <div className="mt-2 font-medium text-slate-900">{log.vehicle_status}</div>
+            <div className="rounded-[28px] border border-white/8 bg-[#0D1526] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.24)]">
+              <h3 className="text-lg font-semibold text-[#F0F4FF]">Analytics Ready Snapshot</h3>
+              <div className="mt-4 space-y-4 text-sm text-[#C7D2E6]">
+                <div className="rounded-2xl border border-white/6 bg-[#111E35] p-4">
+                  <div className="text-xs uppercase tracking-[0.18em] text-[#6B7FA3]">Vehicle Status</div>
+                  <div className="mt-2 font-medium text-[#F0F4FF]">{log.vehicle_status}</div>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Driver Status</div>
-                  <div className="mt-2 font-medium text-slate-900">{log.driver_status}</div>
+                <div className="rounded-2xl border border-white/6 bg-[#111E35] p-4">
+                  <div className="text-xs uppercase tracking-[0.18em] text-[#6B7FA3]">Driver Status</div>
+                  <div className="mt-2 font-medium text-[#F0F4FF]">{log.driver_status}</div>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Current Vehicle Odometer</div>
-                  <div className="mt-2 font-medium text-slate-900">{log.vehicle_current_odometer} km</div>
+                <div className="rounded-2xl border border-white/6 bg-[#111E35] p-4">
+                  <div className="text-xs uppercase tracking-[0.18em] text-[#6B7FA3]">Current Vehicle Odometer</div>
+                  <div className="mt-2 font-medium text-[#F0F4FF]">{log.vehicle_current_odometer} km</div>
                 </div>
               </div>
             </div>
 
             {log.receipt_image ? (
-              <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-900">Receipt Preview</h3>
+              <div className="rounded-[28px] border border-white/8 bg-[#0D1526] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.24)]">
+                <h3 className="text-lg font-semibold text-[#F0F4FF]">Receipt Preview</h3>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={log.receipt_image} alt="Receipt preview" className="mt-4 max-h-[420px] w-full rounded-3xl object-cover" />
               </div>
@@ -148,14 +148,14 @@ export function FuelLogDetailPage({ fuelLogId }: { fuelLogId: string }) {
       )}
 
       {showDelete && log ? (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/45 p-4">
-          <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl">
-            <h3 className="text-xl font-semibold tracking-[-0.03em] text-slate-900">Delete this record?</h3>
-            <p className="mt-2 text-sm text-slate-600">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/65 p-4">
+          <div className="w-full max-w-md rounded-[28px] border border-white/8 bg-[#0D1526] p-6 shadow-2xl">
+            <h3 className="text-xl font-semibold tracking-[-0.03em] text-[#F0F4FF]">Delete this record?</h3>
+            <p className="mt-2 text-sm text-[#6B7FA3]">
               This action will permanently remove the fuel purchase recorded at {log.fuel_station_name}.
             </p>
             <div className="mt-6 flex justify-end gap-3">
-              <button className="btn-secondary" onClick={() => setShowDelete(false)}>
+              <button className="btn-ghost" onClick={() => setShowDelete(false)}>
                 Cancel
               </button>
               <button className="btn-primary !bg-rose-600 !text-white hover:!bg-rose-700" onClick={() => void handleDelete()}>
