@@ -17,10 +17,13 @@ import {
   Flag,
   RoadHorizon,
   Spinner,
+  Fingerprint,
+  ShieldCheck,
 } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { DigiLockerModal } from "@/components/DigiLockerVerificationBlocker";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
@@ -71,6 +74,8 @@ export default function DriverDashboardPage() {
   const [activeTab, setActiveTab] = useState<"trips" | "fuel" | "notifications">("trips");
   const [odometerInput, setOdometerInput] = useState("");
   const [submittingTrip, setSubmittingTrip] = useState<string | null>(null);
+  const [verificationData, setVerificationData] = useState<{ verified: boolean; record?: any } | null>(null);
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
 
   const loadDashboard = async () => {
     if (!user?.driver_id) {
@@ -87,9 +92,23 @@ export default function DriverDashboardPage() {
     }
   };
 
+  const loadVerificationStatus = async () => {
+    if (!user?.driver_id) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/verification/status/${user.driver_id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setVerificationData(data);
+      }
+    } catch (e) {
+      console.error("Failed to load verification status", e);
+    }
+  };
+
   useEffect(() => {
     if (!authLoading) {
       loadDashboard();
+      loadVerificationStatus();
     }
   }, [authLoading, user?.driver_id]);
 
@@ -429,15 +448,69 @@ export default function DriverDashboardPage() {
         <div className="flex flex-col gap-6">
           {/* Driver Profile Summary Widget */}
           <div className="rounded-[24px] border border-white/8 bg-[#0D1526] p-6 shadow-xl flex flex-col items-center text-center">
-            <div className="w-16 h-16 rounded-full bg-[#162440] flex items-center justify-center text-[var(--amber)] font-black text-lg uppercase border border-white/10 mb-4">
-              {user?.full_name?.substring(0, 2) || "DR"}
+            <div className="relative mb-3">
+              <div className="w-16 h-16 rounded-full bg-[#162440] flex items-center justify-center text-[var(--amber)] font-black text-lg uppercase border border-white/10">
+                {user?.full_name?.substring(0, 2) || "DR"}
+              </div>
+              {verificationData?.verified ? (
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#10B981] flex items-center justify-center text-white text-xs border-2 border-[#0D1526]" title="DigiLocker Verified">
+                  <CheckCircle size={14} weight="bold" />
+                </div>
+              ) : (
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#F5A623] flex items-center justify-center text-white text-xs border-2 border-[#0D1526]" title="Unverified Driver">
+                  <Warning size={14} weight="bold" />
+                </div>
+              )}
             </div>
+
             <h3 className="text-base font-bold text-[var(--text-primary)]">{user?.full_name}</h3>
             <p className="text-xs text-[var(--text-secondary)] mt-1">{user?.email}</p>
             {user?.phone && <p className="text-xs text-[var(--text-muted)] mt-0.5">{user.phone}</p>}
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold border border-amber-500/25 bg-amber-500/10 text-[var(--amber)] mt-3">
-              Fleet Driver
-            </span>
+
+            <div className="flex items-center justify-center gap-2 mt-3 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold border border-amber-500/25 bg-amber-500/10 text-[var(--amber)]">
+                Fleet Driver
+              </span>
+
+              {verificationData?.verified ? (
+                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border border-[#10B981]/25 bg-[#10B981]/10 text-[#10B981]">
+                  <CheckCircle size={12} weight="bold" /> Verified
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border border-[#F5A623]/25 bg-[#F5A623]/10 text-[#F5A623]">
+                  <Warning size={12} weight="bold" /> Unverified
+                </span>
+              )}
+            </div>
+
+            {/* Unverified Call to Action Button */}
+            {!verificationData?.verified && (
+              <div className="mt-4 w-full pt-3 border-t border-white/5">
+                <p className="text-[11px] text-[#6B7FA3] mb-2">Driver license verification pending</p>
+                <button
+                  onClick={() => setIsVerifyModalOpen(true)}
+                  className="w-full bg-gradient-to-r from-[#F5A623] to-[#D4891A] hover:from-[#E0961B] hover:to-[#B87514] text-white py-2.5 px-3 rounded-xl text-xs font-bold shadow-lg shadow-[#F5A623]/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <Fingerprint size={16} weight="duotone" />
+                  <span>Verify with DigiLocker</span>
+                </button>
+              </div>
+            )}
+
+            {verificationData?.verified && verificationData.record && (
+              <div className="mt-4 w-full pt-3 border-t border-white/5 text-[10px] text-[#6B7FA3] space-y-1 text-left">
+                <div className="flex justify-between">
+                  <span>DigiLocker Ref:</span>
+                  <span className="text-[#F0F4FF] font-mono">{verificationData.record.verification_id?.slice(0, 14)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Verified Date:</span>
+                  <span className="text-[#F0F4FF]">
+                    {verificationData.record.verification_date ? new Date(verificationData.record.verification_date).toLocaleDateString() : "Verified"}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Quick Metrics Widget */}
@@ -477,6 +550,18 @@ export default function DriverDashboardPage() {
           </div>
         </div>
       </div>
+
+      <DigiLockerModal
+        isOpen={isVerifyModalOpen}
+        onClose={() => setIsVerifyModalOpen(false)}
+        driverId={user?.driver_id || null}
+        driverName={user?.full_name || "Driver"}
+        licenseNumber={"MH14DL2024012345"}
+        onSuccess={() => {
+          loadVerificationStatus();
+          loadDashboard();
+        }}
+      />
     </ModuleShell>
   );
 }

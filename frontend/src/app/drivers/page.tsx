@@ -24,10 +24,11 @@ import {
   X,
   FileText,
   ShieldCheck,
-  SteeringWheel
+  SteeringWheel,
+  Fingerprint
 } from "@phosphor-icons/react";
 import { DemoSwitcher } from "../../components/DemoSwitcher";
-import { DigiLockerVerificationBlocker } from "../../components/DigiLockerVerificationBlocker";
+import { DigiLockerVerificationBlocker, DigiLockerModal } from "../../components/DigiLockerVerificationBlocker";
 
 // API base URL
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
@@ -79,6 +80,7 @@ export default function DriverManagementPage() {
   
   // Toasts state
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [verifyModalDriver, setVerifyModalDriver] = useState<Driver | null>(null);
   
   // Form handling
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
@@ -523,14 +525,19 @@ export default function DriverManagementPage() {
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-[#10B981] bg-[#10B981]/12 border border-[#10B981]/20 rounded-full cursor-help">
                             <CheckCircle size={12} className="text-[#10B981]" /> Verified
                           </span>
-                        ) : driver.verification_status === "failed" ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-[#ef4444] bg-[#ef4444]/12 border border-[#ef4444]/20 rounded-full">
-                            <XCircle size={12} className="text-[#ef4444]" /> Failed
-                          </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-[#f59e0b] bg-[#f59e0b]/12 border border-[#f59e0b]/20 rounded-full">
-                            <Warning size={12} className="text-[#f59e0b]" /> Pending
-                          </span>
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-[#f59e0b] bg-[#f59e0b]/12 border border-[#f59e0b]/20 rounded-full">
+                              <Warning size={10} className="text-[#f59e0b]" /> Unverified
+                            </span>
+                            <button
+                              onClick={() => setVerifyModalDriver(driver)}
+                              className="px-2 py-0.5 text-[10px] font-bold text-white bg-gradient-to-r from-[#F5A623] to-[#D4891A] hover:from-[#E0961B] hover:to-[#B87514] rounded-md shadow-sm flex items-center gap-1 transition-all cursor-pointer"
+                              title="Verify with DigiLocker"
+                            >
+                              <Fingerprint size={12} /> Verify
+                            </button>
+                          </div>
                         )}
 
                         {/* Verification Details Tooltip on Hover */}
@@ -1159,6 +1166,18 @@ export default function DriverManagementPage() {
       </div>
 
       <DigiLockerVerificationBlocker />
+
+      <DigiLockerModal
+        isOpen={!!verifyModalDriver}
+        onClose={() => setVerifyModalDriver(null)}
+        driverId={verifyModalDriver?.id || null}
+        driverName={verifyModalDriver?.full_name || "Driver"}
+        licenseNumber={verifyModalDriver?.license_number || "MH14DL2024012345"}
+        onSuccess={() => {
+          loadDrivers();
+          showToast("success", `${verifyModalDriver?.full_name}'s license verified successfully via DigiLocker!`);
+        }}
+      />
 
     </div>
   );
