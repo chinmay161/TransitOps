@@ -1,10 +1,50 @@
-import Link from "next/link";
-import { expenseService } from "@/lib/expense.service";
-import { ModuleShell } from "@/components/app/ModuleShell";
+"use client";
 
-export default async function ExpenseDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const expense = await expenseService.getById(id);
+import Link from "next/link";
+import { useEffect, useState, use } from "react";
+import { expenseService } from "@/lib/expense.service";
+import { ExpenseRecord } from "@/types/expense";
+import { ModuleShell } from "@/components/app/ModuleShell";
+import { Spinner } from "@phosphor-icons/react";
+
+export default function ExpenseDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const [expense, setExpense] = useState<ExpenseRecord | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    expenseService
+      .getById(id)
+      .then((data) => {
+        setExpense(data);
+        setLoading(false);
+      })
+      .catch((err: Error) => {
+        setError(err.message || "Failed to load expense details.");
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) {
+    return (
+      <ModuleShell title="Expense Details">
+        <div className="flex items-center justify-center p-12 text-[#6B7FA3]">
+          <Spinner size={32} className="animate-spin text-[#F5A623]" />
+        </div>
+      </ModuleShell>
+    );
+  }
+
+  if (error || !expense) {
+    return (
+      <ModuleShell title="Expense Details">
+        <div className="rounded-[28px] border border-white/8 bg-[#0D1526] p-6 text-red-400">
+          {error || "Expense not found"}
+        </div>
+      </ModuleShell>
+    );
+  }
 
   return (
     <ModuleShell
