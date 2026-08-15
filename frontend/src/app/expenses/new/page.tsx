@@ -128,13 +128,15 @@ export default function NewExpensePage() {
             ))}
           </select>
           <input type="date" {...register("expense_date", { required: true })} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3" />
-          <select {...register("expense_status")} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
-            {metadata?.statuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
+          {user?.role !== "driver" && (
+            <select {...register("expense_status")} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
+              {metadata?.statuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          )}
           <input {...register("receipt_image")} placeholder="Receipt Image URL or Data URL" className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3 md:col-span-2" />
           <textarea {...register("description")} placeholder="Description" className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3 md:col-span-2" rows={4} />
           <textarea {...register("remarks")} placeholder="Remarks" className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3 md:col-span-2" rows={3} />

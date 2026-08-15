@@ -6,9 +6,11 @@ import { useForm } from "react-hook-form";
 import { ModuleShell } from "@/components/app/ModuleShell";
 import { expenseService } from "@/lib/expense.service";
 import { ExpenseMetadata, ExpenseRecord, ExpenseUpsertInput } from "@/types/expense";
+import { useAuth } from "@/context/auth-context";
 
 export default function EditExpensePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { user } = useAuth();
   const [metadata, setMetadata] = useState<ExpenseMetadata | null>(null);
   const [expense, setExpense] = useState<ExpenseRecord | null>(null);
   const { register, handleSubmit, reset, watch, setValue } = useForm<ExpenseUpsertInput>();
@@ -80,8 +82,8 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
               </option>
             ))}
           </select>
-          <select {...register("driver_id")} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
-            <option value="">Select driver</option>
+          <select {...register("driver_id")} disabled={user?.role === "driver"} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3 disabled:opacity-60">
+            <option value="">{user?.role === "driver" ? user.full_name : "Select driver"}</option>
             {metadata?.drivers.map((driver) => (
               <option key={driver.id} value={driver.id}>
                 {driver.full_name}
@@ -120,13 +122,15 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
             ))}
           </select>
           <input type="date" {...register("expense_date")} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3" />
-          <select {...register("expense_status")} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
-            {metadata?.statuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
+          {user?.role !== "driver" && (
+            <select {...register("expense_status")} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
+              {metadata?.statuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          )}
           <input {...register("receipt_image")} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3 md:col-span-2" />
           <textarea {...register("description")} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3 md:col-span-2" rows={4} />
           <textarea {...register("remarks")} placeholder="Remarks" className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3 md:col-span-2" rows={3} />
