@@ -20,8 +20,17 @@ export class ExpenseController {
     return fallbackDriverId || null;
   }
 
-  getMetadata = async (_req: Request, res: Response) => {
+  getMetadata = async (req: Request, res: Response) => {
+    const authReq = req as AuthRequest;
     const result = await this.expenseService.getMetadata();
+    if (authReq.user?.role === "driver") {
+      const driverId = await this.getDriverId(authReq);
+      if (driverId) {
+        result.drivers = result.drivers.filter((d: any) => d.id === driverId);
+      } else {
+        result.drivers = [];
+      }
+    }
     sendSuccess(res, 200, "Expense metadata fetched successfully.", result);
   };
 

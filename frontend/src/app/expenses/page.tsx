@@ -85,14 +85,16 @@ export default function ExpensesPage() {
               </option>
             ))}
           </select>
-          <select suppressHydrationWarning onChange={(e) => setFilters((current) => ({ ...current, driver_id: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
-            <option value="">All drivers</option>
-            {metadata?.drivers.map((driver) => (
-              <option key={driver.id} value={driver.id}>
-                {driver.full_name}
-              </option>
-            ))}
-          </select>
+          {user?.role !== "driver" && (
+            <select suppressHydrationWarning onChange={(e) => setFilters((current) => ({ ...current, driver_id: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
+              <option value="">All drivers</option>
+              {metadata?.drivers.map((driver) => (
+                <option key={driver.id} value={driver.id}>
+                  {driver.full_name}
+                </option>
+              ))}
+            </select>
+          )}
           <input suppressHydrationWarning placeholder="Vendor" onChange={(e) => setFilters((current) => ({ ...current, vendor: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3" />
           <select suppressHydrationWarning onChange={(e) => setFilters((current) => ({ ...current, payment_method: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
             <option value="">All payment methods</option>
