@@ -5,12 +5,14 @@ import { useEffect, useMemo, useState } from "react";
 import { expenseService } from "@/lib/expense.service";
 import { ExpenseMetadata, ExpenseRecord } from "@/types/expense";
 import { ModuleShell } from "@/components/app/ModuleShell";
+import { useAuth } from "@/context/auth-context";
 
 function currency(value: number) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(value);
 }
 
 export default function ExpensesPage() {
+  const { user } = useAuth();
   const [records, setRecords] = useState<ExpenseRecord[]>([]);
   const [approvals, setApprovals] = useState<ExpenseRecord[]>([]);
   const [summary, setSummary] = useState<Record<string, number> | null>(null);
@@ -124,27 +126,29 @@ export default function ExpensesPage() {
         ))}
       </section>
 
-      <section className="rounded-[8px] border border-white/8 bg-[#0D1526] p-6">
-        <h2 className="mb-4 text-xl font-bold">Approval Queue</h2>
-        <div className="grid gap-3">
-          {approvals.slice(0, 6).map((record) => (
-            <div key={record.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-white/8 pb-3">
-              <div>
-                <div className="font-semibold">{record.registration_number} / {record.vendor_name || record.vendor || record.category}</div>
-                <div className="text-sm text-[#7F93B7]">{currency(record.total_amount)} / {record.expense_date}</div>
+      {user?.role !== "driver" && (
+        <section className="rounded-[8px] border border-white/8 bg-[#0D1526] p-6">
+          <h2 className="mb-4 text-xl font-bold">Approval Queue</h2>
+          <div className="grid gap-3">
+            {approvals.slice(0, 6).map((record) => (
+              <div key={record.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-white/8 pb-3">
+                <div>
+                  <div className="font-semibold">{record.registration_number} / {record.vendor_name || record.vendor || record.category}</div>
+                  <div className="text-sm text-[#7F93B7]">{currency(record.total_amount)} / {record.expense_date}</div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="btn-secondary" onClick={() => void expenseService.updateStatus(record.id, { expense_status: "rejected", remarks: "Rejected from approval screen" }).then(refresh)}>Reject</button>
+                  <button className="btn-primary" onClick={() => {
+                    const approver = metadata?.approvers[0]?.id;
+                    if (approver) void expenseService.updateStatus(record.id, { expense_status: "approved", approved_by: approver }).then(refresh);
+                  }}>Approve</button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button className="btn-secondary" onClick={() => void expenseService.updateStatus(record.id, { expense_status: "rejected", remarks: "Rejected from approval screen" }).then(refresh)}>Reject</button>
-                <button className="btn-primary" onClick={() => {
-                  const approver = metadata?.approvers[0]?.id;
-                  if (approver) void expenseService.updateStatus(record.id, { expense_status: "approved", approved_by: approver }).then(refresh);
-                }}>Approve</button>
-              </div>
-            </div>
-          ))}
-          {approvals.length === 0 ? <div className="text-sm text-[#7F93B7]">No pending approvals.</div> : null}
-        </div>
-      </section>
+            ))}
+            {approvals.length === 0 ? <div className="text-sm text-[#7F93B7]">No pending approvals.</div> : null}
+          </div>
+        </section>
+      )}
 
       <section className="rounded-[28px] border border-white/8 bg-[#0D1526] p-6">
         {error ? <div className="text-red-300">{error}</div> : null}

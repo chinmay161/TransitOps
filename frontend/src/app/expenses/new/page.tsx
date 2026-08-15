@@ -7,14 +7,17 @@ import { ModuleShell } from "@/components/app/ModuleShell";
 import { expenseService } from "@/lib/expense.service";
 import { ExpenseMetadata, ExpenseUpsertInput } from "@/types/expense";
 
+import { useAuth } from "@/context/auth-context";
+
 export default function NewExpensePage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [metadata, setMetadata] = useState<ExpenseMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { register, handleSubmit, watch, setValue } = useForm<ExpenseUpsertInput>({
     defaultValues: {
       vehicle_id: "",
-      driver_id: "",
+      driver_id: user?.role === "driver" ? user.driver_id || "" : "",
       trip_id: "",
       category: "fuel",
       amount: 0,
@@ -39,6 +42,12 @@ export default function NewExpensePage() {
 
   const selectedVehicleId = watch("vehicle_id");
   const selectedTripId = watch("trip_id");
+
+  useEffect(() => {
+    if (user?.role === "driver" && user?.driver_id) {
+      setValue("driver_id", user.driver_id);
+    }
+  }, [user, setValue]);
 
   const availableTrips = useMemo(() => {
     if (!selectedVehicleId) return metadata?.trips || [];
@@ -79,8 +88,8 @@ export default function NewExpensePage() {
               </option>
             ))}
           </select>
-          <select {...register("driver_id")} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
-            <option value="">Select driver</option>
+          <select {...register("driver_id")} disabled={user?.role === "driver"} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3 disabled:opacity-60">
+            <option value="">{user?.role === "driver" ? user.full_name : "Select driver"}</option>
             {metadata?.drivers.map((driver) => (
               <option key={driver.id} value={driver.id}>
                 {driver.full_name}
