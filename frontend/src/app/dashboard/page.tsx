@@ -95,7 +95,9 @@ export default function DriverDashboardPage() {
   const loadVerificationStatus = async () => {
     if (!user?.driver_id) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/verification/status/${user.driver_id}`);
+      const res = await fetch(`${API_BASE_URL}/api/verification/status/${user.driver_id}`, {
+        credentials: "include"
+      });
       if (res.ok) {
         const data = await res.json();
         setVerificationData(data);
