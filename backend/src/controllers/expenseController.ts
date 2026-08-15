@@ -6,6 +6,20 @@ import { AuthRequest } from "../modules/auth/auth.middleware";
 export class ExpenseController {
   constructor(private readonly expenseService: ExpenseService) {}
 
+  private async getDriverId(authReq: AuthRequest, fallbackDriverId?: string): Promise<string | null> {
+    if (authReq.user?.driver_id) {
+      return authReq.user.driver_id;
+    }
+    if (authReq.user?.userId) {
+      const driverId = await this.expenseService.getDriverIdByUserId(authReq.user.userId);
+      if (driverId) {
+        authReq.user.driver_id = driverId;
+        return driverId;
+      }
+    }
+    return fallbackDriverId || null;
+  }
+
   getMetadata = async (_req: Request, res: Response) => {
     const result = await this.expenseService.getMetadata();
     sendSuccess(res, 200, "Expense metadata fetched successfully.", result);
@@ -16,7 +30,8 @@ export class ExpenseController {
     const query = { ...(req.query as Record<string, string | undefined>) };
 
     if (authReq.user?.role === "driver") {
-      if (!authReq.user.driver_id) {
+      const driverId = await this.getDriverId(authReq);
+      if (!driverId) {
         return sendSuccess(res, 200, "Expense summary fetched successfully.", {
           summary: {
             total_expense_records: 0,
@@ -30,7 +45,7 @@ export class ExpenseController {
           }
         });
       }
-      query.driver_id = authReq.user.driver_id;
+      query.driver_id = driverId;
     }
 
     const result = await this.expenseService.getSummary(query);
@@ -42,10 +57,11 @@ export class ExpenseController {
     const query = { ...(req.query as Record<string, string | undefined>) };
 
     if (authReq.user?.role === "driver") {
-      if (!authReq.user.driver_id) {
+      const driverId = await this.getDriverId(authReq);
+      if (!driverId) {
         return sendSuccess(res, 200, "Expenses fetched successfully.", []);
       }
-      query.driver_id = authReq.user.driver_id;
+      query.driver_id = driverId;
     }
 
     const result = await this.expenseService.listExpenses(query);
@@ -66,8 +82,11 @@ export class ExpenseController {
     const authReq = req as AuthRequest;
     const result = await this.expenseService.getExpenseById(req.params.id);
 
-    if (authReq.user?.role === "driver" && result.driver_id !== authReq.user.driver_id) {
-      throw new ApiError(403, "You can only view your own expenses.");
+    if (authReq.user?.role === "driver") {
+      const driverId = await this.getDriverId(authReq);
+      if (result.driver_id !== driverId) {
+        throw new ApiError(403, "You can only view your own expenses.");
+      }
     }
 
     sendSuccess(res, 200, "Expense fetched successfully.", result);
@@ -78,10 +97,11 @@ export class ExpenseController {
     const payload = { ...req.body };
 
     if (authReq.user?.role === "driver") {
-      if (!authReq.user.driver_id) {
+      const driverId = await this.getDriverId(authReq, payload.driver_id);
+      if (!driverId) {
         throw new ApiError(403, "Driver profile not found.");
       }
-      payload.driver_id = authReq.user.driver_id;
+      payload.driver_id = driverId;
       payload.expense_status = "pending";
       payload.approved_by = null;
     }
@@ -95,10 +115,11 @@ export class ExpenseController {
     const existing = await this.expenseService.getExpenseById(req.params.id);
 
     if (authReq.user?.role === "driver") {
-      if (existing.driver_id !== authReq.user.driver_id) {
+      const driverId = await this.getDriverId(authReq);
+      if (existing.driver_id !== driverId) {
         throw new ApiError(403, "You can only edit your own expenses.");
       }
-      req.body.driver_id = authReq.user.driver_id;
+      req.body.driver_id = driverId;
       req.body.expense_status = existing.expense_status; // Drivers cannot alter approval status
     }
 
@@ -120,8 +141,11 @@ export class ExpenseController {
     const authReq = req as AuthRequest;
     const existing = await this.expenseService.getExpenseById(req.params.id);
 
-    if (authReq.user?.role === "driver" && existing.driver_id !== authReq.user.driver_id) {
-      throw new ApiError(403, "You can only delete your own expenses.");
+    if (authReq.user?.role === "driver") {
+      const driverId = await this.getDriverId(authReq);
+      if (existing.driver_id !== driverId) {
+        throw new ApiError(403, "You can only delete your own expenses.");
+      }
     }
 
     const result = await this.expenseService.deleteExpense(req.params.id);

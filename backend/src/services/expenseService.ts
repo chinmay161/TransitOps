@@ -43,6 +43,14 @@ function validateEnum<T extends readonly string[]>(value: string, allowed: T, fi
 export class ExpenseService {
   constructor(private readonly pool: Pool) {}
 
+  async getDriverIdByUserId(userId: string): Promise<string | null> {
+    const result = await this.pool.query(
+      "SELECT id FROM drivers WHERE user_id = $1 LIMIT 1",
+      [userId]
+    );
+    return result.rows[0]?.id || null;
+  }
+
   async getMetadata() {
     const [vehicles, drivers, trips, approvers] = await Promise.all([
       this.pool.query(
