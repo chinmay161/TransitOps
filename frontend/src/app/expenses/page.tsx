@@ -67,7 +67,7 @@ export default function ExpensesPage() {
     >
       <section className="rounded-[28px] border border-white/8 bg-[#0D1526] p-6">
         <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-          <select onChange={(e) => setFilters((current) => ({ ...current, vehicle_id: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
+          <select suppressHydrationWarning onChange={(e) => setFilters((current) => ({ ...current, vehicle_id: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
             <option value="">All vehicles</option>
             {metadata?.vehicles.map((vehicle) => (
               <option key={vehicle.id} value={vehicle.id}>
@@ -75,7 +75,7 @@ export default function ExpensesPage() {
               </option>
             ))}
           </select>
-          <select onChange={(e) => setFilters((current) => ({ ...current, category: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
+          <select suppressHydrationWarning onChange={(e) => setFilters((current) => ({ ...current, category: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
             <option value="">All categories</option>
             {metadata?.categories.map((category) => (
               <option key={category} value={category}>
@@ -83,7 +83,7 @@ export default function ExpensesPage() {
               </option>
             ))}
           </select>
-          <select onChange={(e) => setFilters((current) => ({ ...current, driver_id: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
+          <select suppressHydrationWarning onChange={(e) => setFilters((current) => ({ ...current, driver_id: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
             <option value="">All drivers</option>
             {metadata?.drivers.map((driver) => (
               <option key={driver.id} value={driver.id}>
@@ -91,22 +91,22 @@ export default function ExpensesPage() {
               </option>
             ))}
           </select>
-          <input placeholder="Vendor" onChange={(e) => setFilters((current) => ({ ...current, vendor: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3" />
-          <select onChange={(e) => setFilters((current) => ({ ...current, payment_method: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
+          <input suppressHydrationWarning placeholder="Vendor" onChange={(e) => setFilters((current) => ({ ...current, vendor: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3" />
+          <select suppressHydrationWarning onChange={(e) => setFilters((current) => ({ ...current, payment_method: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
             <option value="">All payment methods</option>
             {metadata?.payment_methods.map((method) => (
               <option key={method} value={method}>{method}</option>
             ))}
           </select>
-          <select onChange={(e) => setFilters((current) => ({ ...current, expense_status: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
+          <select suppressHydrationWarning onChange={(e) => setFilters((current) => ({ ...current, expense_status: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
             <option value="">All statuses</option>
             {metadata?.statuses.map((status) => (
               <option key={status} value={status}>{status}</option>
             ))}
           </select>
-          <input placeholder="Search vehicle, driver, vendor, invoice, receipt" onChange={(e) => setFilters((current) => ({ ...current, q: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3" />
-          <input type="date" onChange={(e) => setFilters((current) => ({ ...current, date_from: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3" />
-          <input type="date" onChange={(e) => setFilters((current) => ({ ...current, date_to: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3" />
+          <input suppressHydrationWarning placeholder="Search vehicle, driver, vendor, invoice, receipt" onChange={(e) => setFilters((current) => ({ ...current, q: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3" />
+          <input suppressHydrationWarning type="date" onChange={(e) => setFilters((current) => ({ ...current, date_from: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3" />
+          <input suppressHydrationWarning type="date" onChange={(e) => setFilters((current) => ({ ...current, date_to: e.target.value }))} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3" />
         </div>
       </section>
 

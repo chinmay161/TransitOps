@@ -1801,7 +1801,20 @@ app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+// 404 Not Found fallback for unmatched API routes
+app.use((req: Request, res: Response) => {
+  sendError(res, 404, "NOT_FOUND", `Endpoint ${req.method} ${req.originalUrl} not found`);
+});
+
 app.use(errorHandler);
+
+process.on("unhandledRejection", (reason: unknown) => {
+  console.error("[Process] Unhandled Rejection:", reason);
+});
+
+process.on("uncaughtException", (error: Error) => {
+  console.error("[Process] Uncaught Exception:", error);
+});
 
 async function startServer() {
   await ensureFuelLogSchema(pool);

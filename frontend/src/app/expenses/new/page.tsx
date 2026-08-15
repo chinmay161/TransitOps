@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { ModuleShell } from "@/components/app/ModuleShell";
@@ -11,7 +11,7 @@ export default function NewExpensePage() {
   const router = useRouter();
   const [metadata, setMetadata] = useState<ExpenseMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { register, handleSubmit } = useForm<ExpenseUpsertInput>({
+  const { register, handleSubmit, watch, setValue } = useForm<ExpenseUpsertInput>({
     defaultValues: {
       vehicle_id: "",
       driver_id: "",
@@ -36,6 +36,25 @@ export default function NewExpensePage() {
       expense_date: new Date().toISOString().slice(0, 10),
     },
   });
+
+  const selectedVehicleId = watch("vehicle_id");
+  const selectedTripId = watch("trip_id");
+
+  const availableTrips = useMemo(() => {
+    if (!selectedVehicleId) return metadata?.trips || [];
+    return (metadata?.trips || []).filter(
+      (trip) => !trip.vehicle_id || trip.vehicle_id === selectedVehicleId,
+    );
+  }, [metadata?.trips, selectedVehicleId]);
+
+  useEffect(() => {
+    if (selectedTripId && selectedVehicleId) {
+      const isValid = availableTrips.some((t) => t.id === selectedTripId);
+      if (!isValid) {
+        setValue("trip_id", "");
+      }
+    }
+  }, [availableTrips, selectedTripId, selectedVehicleId, setValue]);
 
   useEffect(() => {
     void expenseService.getMetadata().then(setMetadata).catch((err: Error) => setError(err.message));
@@ -70,7 +89,7 @@ export default function NewExpensePage() {
           </select>
           <select {...register("trip_id")} className="rounded-2xl border border-white/8 bg-[#070D1A] px-4 py-3">
             <option value="">Select trip</option>
-            {metadata?.trips.map((trip) => (
+            {availableTrips.map((trip) => (
               <option key={trip.id} value={trip.id}>
                 {trip.origin} to {trip.destination}
               </option>

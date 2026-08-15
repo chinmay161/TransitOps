@@ -14,6 +14,11 @@ interface ApiEnvelope<T> {
   message: string;
   data: T;
   meta?: FuelLogListResponse["meta"];
+  error?: {
+    code?: string;
+    message?: string;
+    details?: unknown;
+  };
 }
 
 function buildQuery(filters: FuelLogFilters) {
@@ -28,6 +33,7 @@ function buildQuery(filters: FuelLogFilters) {
 
 async function request<T>(path: string, init?: RequestInit) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers || {}),
@@ -35,9 +41,10 @@ async function request<T>(path: string, init?: RequestInit) {
     ...init,
   });
 
-  const payload = (await response.json()) as ApiEnvelope<T>;
-  if (!response.ok || !payload.success) {
-    throw new Error(payload.message || "Request failed.");
+  const payload = (await response.json().catch(() => ({}))) as ApiEnvelope<T>;
+  if (!response.ok || payload.success === false) {
+    const errorMsg = payload.message || payload.error?.message || `Request failed with status ${response.status}.`;
+    throw new Error(errorMsg);
   }
 
   return payload;

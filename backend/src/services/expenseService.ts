@@ -57,7 +57,7 @@ export class ExpenseService {
          ORDER BY u.full_name ASC`,
       ),
       this.pool.query(
-        `SELECT id, origin, destination
+        `SELECT id, origin, destination, vehicle_id
          FROM trips
          ORDER BY scheduled_start DESC
          LIMIT 100`,

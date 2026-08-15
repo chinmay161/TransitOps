@@ -55,7 +55,7 @@ export interface ExpenseRecord {
 export interface ExpenseMetadata {
   vehicles: Array<{ id: string; registration_number: string; vehicle_name: string }>;
   drivers: Array<{ id: string; full_name: string }>;
-  trips: Array<{ id: string; origin: string; destination: string }>;
+  trips: Array<{ id: string; origin: string; destination: string; vehicle_id?: string | null }>;
   categories: ExpenseCategory[];
   payment_methods: string[];
   statuses: ExpenseStatus[];

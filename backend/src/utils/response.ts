@@ -1,7 +1,7 @@
 import { Response } from 'express';
 
 export function sendSuccess<T>(res: Response, data: T, statusCode = 200) {
-  return res.status(statusCode).json({ data });
+  return res.status(statusCode).json({ success: true, data });
 }
 
 export function sendError(
@@ -12,6 +12,8 @@ export function sendError(
   details?: unknown
 ) {
   return res.status(statusCode).json({
+    success: false,
+    message,
     error: { code, message, details: details || undefined },
   });
 }

@@ -3,25 +3,38 @@ import { ExpenseMetadata, ExpenseRecord, ExpenseSummary, ExpenseUpsertInput } fr
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
 interface ApiEnvelope<T> {
-  success: boolean;
-  message: string;
-  data: T;
+  success?: boolean;
+  message?: string;
+  data?: T;
+  error?: {
+    code?: string;
+    message?: string;
+    details?: unknown;
+  };
 }
 
 async function request<T>(path: string, init?: RequestInit) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers || {}),
-    },
-    cache: "no-store",
-    ...init,
-  });
-  const payload = (await response.json()) as ApiEnvelope<T>;
-  if (!response.ok || !payload.success) {
-    throw new Error(payload.message || "Request failed.");
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(init?.headers || {}),
+      },
+      cache: "no-store",
+      ...init,
+    });
+  } catch (err: any) {
+    throw new Error(err?.message || "Network error. Unable to connect to server.");
   }
-  return payload.data;
+
+  const payload = (await response.json().catch(() => ({}))) as ApiEnvelope<T>;
+  if (!response.ok || payload.success === false) {
+    const errorMsg = payload.message || payload.error?.message || `Request failed with status ${response.status}.`;
+    throw new Error(errorMsg);
+  }
+  return (payload.data !== undefined ? payload.data : payload) as T;
 }
 
 export const expenseService = {

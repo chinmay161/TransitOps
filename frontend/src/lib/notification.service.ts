@@ -10,6 +10,7 @@ interface ApiEnvelope<T> {
 
 async function request<T>(path: string, init?: RequestInit) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
+    credentials: "include",
     cache: "no-store",
     headers: {
       "Content-Type": "application/json",
