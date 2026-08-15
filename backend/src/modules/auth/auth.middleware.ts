@@ -57,6 +57,11 @@ export function authorizeModule(moduleName: string) {
       const rolePermissions = settingsResult.rows[0].role_permissions;
       const allowedModules = rolePermissions[role] || [];
 
+      // Driver role is always granted access to trips (to view assigned trips & start/complete journey)
+      if (role === 'driver' && moduleName === 'trips') {
+        return next();
+      }
+
       if (allowedModules.includes('all') || allowedModules.includes(moduleName)) {
         return next();
       }

@@ -22,7 +22,7 @@ const statements = [
   `ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS company_logo TEXT`,
   `ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS language VARCHAR(30) NOT NULL DEFAULT 'en'`,
   `ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS email_settings JSONB NOT NULL DEFAULT '{"provider":"smtp","from_email":"","from_name":"TransitOps","smtp_host":"","smtp_port":587,"smtp_secure":false,"smtp_username":"","smtp_password":"","reply_to":""}'::jsonb`,
-  `ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS role_permissions JSONB NOT NULL DEFAULT '{"admin":["all"],"fleet_manager":["dashboard","vehicles","drivers","trips","maintenance","fuel_logs","expenses","reports","notifications"],"dispatcher":["dashboard","trips","notifications"],"driver":["dashboard","fuel_logs","expenses","notifications"]}'::jsonb`,
+  `ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS role_permissions JSONB NOT NULL DEFAULT '{"admin":["all"],"fleet_manager":["dashboard","vehicles","drivers","trips","maintenance","fuel_logs","expenses","reports","notifications"],"dispatcher":["dashboard","trips","notifications"],"driver":["dashboard","trips","fuel_logs","expenses","notifications"]}'::jsonb`,
   `CREATE TABLE IF NOT EXISTS audit_logs (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       actor_id UUID,
