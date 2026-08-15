@@ -118,6 +118,7 @@ export default function DriverDashboardPage() {
     setSubmittingTrip(tripId);
     try {
       const res = await fetch(`${API_BASE_URL}/trips/${tripId}/start`, {
+        credentials: "include",
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
       });
@@ -142,6 +143,7 @@ export default function DriverDashboardPage() {
     setSubmittingTrip(tripId);
     try {
       const res = await fetch(`${API_BASE_URL}/trips/${tripId}/complete`, {
+        credentials: "include",
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ final_odometer: Number(odometerInput) }),

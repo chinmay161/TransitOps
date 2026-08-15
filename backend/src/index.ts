@@ -1648,18 +1648,28 @@ app.patch('/trips/:id/start', async (req: Request, res: Response) => {
     }
 
     // Verify driver and vehicle statuses are available
-    const driverQuery = 'SELECT status FROM drivers WHERE id = $1';
-    const driverRes = await client.query(driverQuery, [driver_id]);
-    if (driverRes.rows[0].status !== 'available') {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Driver is no longer available.' });
+    if (driver_id) {
+      const driverQuery = 'SELECT status FROM drivers WHERE id = $1';
+      const driverRes = await client.query(driverQuery, [driver_id]);
+      if (driverRes.rows.length > 0) {
+        const dStatus = driverRes.rows[0].status;
+        if (dStatus !== 'available' && dStatus !== 'on_trip') {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ error: `Driver status is currently '${dStatus}'. Driver must be available to start journey.` });
+        }
+      }
     }
 
-    const vehicleQuery = 'SELECT status FROM vehicles WHERE id = $1';
-    const vehicleRes = await client.query(vehicleQuery, [vehicle_id]);
-    if (vehicleRes.rows[0].status !== 'available') {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Vehicle is no longer available.' });
+    if (vehicle_id) {
+      const vehicleQuery = 'SELECT status FROM vehicles WHERE id = $1';
+      const vehicleRes = await client.query(vehicleQuery, [vehicle_id]);
+      if (vehicleRes.rows.length > 0) {
+        const vStatus = vehicleRes.rows[0].status;
+        if (vStatus !== 'available' && vStatus !== 'assigned') {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ error: `Vehicle status is currently '${vStatus}'. Vehicle must be available to start journey.` });
+        }
+      }
     }
 
     // Update statuses
