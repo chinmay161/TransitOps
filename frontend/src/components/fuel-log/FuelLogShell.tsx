@@ -22,24 +22,24 @@ export function FuelLogShell({
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-[linear-gradient(180deg,#fff7eb_0%,#f8fafc_28%,#ffffff_100%)] pt-24 text-slate-800">
+      <main className="dot-grid min-h-screen bg-[#070D1A] pt-24 text-[#F0F4FF]">
         <section className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="overflow-hidden rounded-[32px] border border-amber-100 bg-white/80 p-6 shadow-[0_24px_80px_rgba(148,163,184,0.18)] backdrop-blur sm:p-8">
+          <div className="overflow-hidden rounded-[32px] border border-white/8 bg-[#0D1526] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-4">
-                <div className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-amber-700">
-                  India Fuel Operations
+                <div className="inline-flex rounded-full border border-white/8 bg-white/[0.04] px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#F5A623]">
+                  Fuel Operations
                 </div>
                 <div>
-                  <h1 className="text-3xl font-semibold tracking-[-0.04em] text-slate-900 sm:text-4xl">{title}</h1>
-                  <p className="mt-2 max-w-3xl text-sm text-slate-600 sm:text-base">{subtitle}</p>
+                  <h1 className="text-3xl font-black tracking-[-0.04em] text-[#F0F4FF] sm:text-4xl">{title}</h1>
+                  <p className="mt-2 max-w-3xl text-sm text-[#6B7FA3] sm:text-base">{subtitle}</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   {tabs.map((tab) => (
                     <Link
                       key={tab.href}
                       href={tab.href}
-                      className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-amber-300 hover:bg-amber-50 hover:text-slate-900"
+                      className="rounded-full border border-white/8 bg-white/[0.03] px-4 py-2 text-sm font-medium text-[#C7D2E6] transition hover:border-[#F5A623]/30 hover:bg-[#F5A623]/10 hover:text-[#F0F4FF]"
                     >
                       {tab.label}
                     </Link>
