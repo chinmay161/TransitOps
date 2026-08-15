@@ -25,7 +25,7 @@ export class MockDigiLockerService implements DigiLockerService {
 
     // Get the driver record from DB to verify they exist and match their full name
     const query = `
-      SELECT d.id, u.full_name 
+      SELECT d.id, d.license_number, u.full_name 
       FROM drivers d
       JOIN users u ON d.user_id = u.id
       WHERE d.id = $1
@@ -35,13 +35,28 @@ export class MockDigiLockerService implements DigiLockerService {
       throw new Error("Driver profile not found in database.");
     }
     const driverName = res.rows[0].full_name;
+    const currentLicense = res.rows[0].license_number;
+
+    let targetLicenseNumber = (licenseNumber && licenseNumber.trim() ? licenseNumber.toUpperCase().trim() : currentLicense) || currentLicense;
+
+    if (targetLicenseNumber) {
+      const conflictCheck = await this.pool.query(
+        `SELECT id FROM drivers WHERE UPPER(license_number) = UPPER($1) AND id != $2`,
+        [targetLicenseNumber, driverId]
+      );
+      if (conflictCheck.rows.length > 0) {
+        targetLicenseNumber = currentLicense || `DL-${driverId.replace(/-/g, "").substring(0, 10).toUpperCase()}`;
+      }
+    } else {
+      targetLicenseNumber = `DL-${driverId.replace(/-/g, "").substring(0, 10).toUpperCase()}`;
+    }
 
     // Generate verified license output
     const verifiedResult: VerificationResult = {
       verified: true,
       verificationId: `DLV-2026-${Math.floor(100000 + Math.random() * 900000)}`,
       holderName: driverName,
-      licenseNumber: licenseNumber.toUpperCase().trim(),
+      licenseNumber: targetLicenseNumber,
       licenseType: "LMV",
       issueDate: "2022-03-14",
       expiryDate: "2042-03-13",
