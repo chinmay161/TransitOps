@@ -5,6 +5,7 @@ const roleHierarchy: Record<UserRole, number> = {
   fleet_manager: 80,
   dispatcher: 50,
   driver: 30,
+  pending: 10,
 };
 
 export function roleAtLeast(userRole: UserRole, requiredRole: UserRole): boolean {

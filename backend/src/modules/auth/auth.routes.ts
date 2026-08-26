@@ -1,23 +1,12 @@
 import { Router } from 'express';
 import * as authController from './auth.controller.js';
-import { authenticate, authorize } from './auth.middleware.js';
+import { authenticate } from './auth.middleware.js';
 
 const router = Router();
 
-router.post('/login', authController.login);
-router.post('/logout', authController.logout);
-router.post('/change-password', authenticate, authController.changePassword);
-router.get('/verify-email', authController.verifyEmail);
+// Session profile for the authenticated Better Auth user.
+// Sign-in/sign-out endpoints are served by the Better Auth handler
+// mounted at /api/auth/* in index.ts.
 router.get('/me', authenticate, authController.getMe);
-
-// Public registration (Drivers and Dispatchers self-register)
-router.post('/register/driver', authController.registerDriver);
-router.post('/register/dispatcher', authController.registerDispatcher);
-
-// MOCK EMAIL VERIFICATION (Hackathon Demo)
-router.post('/dev/verify-email', authController.devVerifyEmail);
-
-// Admin-only: create Fleet Manager accounts
-router.post('/users/fleet-managers', authenticate, authorize('admin'), authController.createFleetManager);
 
 export default router;

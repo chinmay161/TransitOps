@@ -1,3 +1,3 @@
-export { default as authRouter } from './auth.routes.js';
 export { authenticate, authorize, authorizeModule } from './auth.middleware.js';
-export type { AuthRequest, AuthenticatedUser, UserRole } from './types.js';
+export { auth } from './better-auth.js';
+export { default as authMeRouter } from './auth.routes.js';

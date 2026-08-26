@@ -1,22 +1,42 @@
-import { Response, NextFunction } from 'express';
-import { verifyToken } from './jwt.js';
-import { sendError } from '../../utils/response.js';
+import type { NextFunction, Response } from 'express';
+import { fromNodeHeaders } from 'better-auth/node';
 import type { AuthRequest, UserRole } from './types.js';
+export type { AuthRequest, UserRole };
+import { sendError } from '../../utils/response.js';
+import { auth } from './better-auth.js';
 import pool from '../../config/database.js';
 
-export function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
-  const token = req.cookies?.access_token;
-
-  if (!token) {
-    return sendError(res, 401, 'UNAUTHORIZED', 'Authentication required');
-  }
-
+// Validates the Better Auth session cookie and projects it onto req.user with
+// the same contract the rest of the app already consumes (userId, role, email).
+export async function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const decoded = verifyToken(token);
-    req.user = { userId: decoded.userId, role: decoded.role, email: decoded.email };
+    const session = await auth.api.getSession({
+      headers: fromNodeHeaders(req.headers),
+    });
+
+    if (!session?.user) {
+      return sendError(res, 401, 'UNAUTHORIZED', 'Authentication required');
+    }
+
+    // Runtime fields provided by Better Auth's mapped TransitOps user model;
+    // not always present in the static type inference.
+    const sessionUser = session.user as typeof session.user & {
+      role?: string | null;
+      is_active?: boolean | null;
+    };
+
+    if (sessionUser.is_active === false) {
+      return sendError(res, 401, 'UNAUTHORIZED', 'Account has been deactivated');
+    }
+
+    req.user = {
+      userId: sessionUser.id,
+      role: sessionUser.role as UserRole,
+      email: sessionUser.email,
+    };
     next();
   } catch {
-    return sendError(res, 401, 'UNAUTHORIZED', 'Invalid or expired token');
+    return sendError(res, 401, 'UNAUTHORIZED', 'Invalid or expired session');
   }
 }
 
@@ -45,6 +65,11 @@ export function authorizeModule(moduleName: string) {
     // Admin role bypasses all checks (has access to everything)
     if (role === 'admin') {
       return next();
+    }
+
+    // Safe onboarding role has no module access until an admin assigns one.
+    if (role === 'pending') {
+      return sendError(res, 403, 'FORBIDDEN', 'Your account is awaiting role assignment');
     }
 
     try {

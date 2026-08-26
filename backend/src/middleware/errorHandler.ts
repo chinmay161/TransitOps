@@ -30,14 +30,6 @@ export function errorHandler(
     return sendError(res, err.statusCode, 'BAD_REQUEST', err.message);
   }
 
-  if (err.name === 'JsonWebTokenError') {
-    return sendError(res, 401, 'UNAUTHORIZED', 'Invalid authentication token');
-  }
-
-  if (err.name === 'TokenExpiredError') {
-    return sendError(res, 401, 'UNAUTHORIZED', 'Authentication token has expired');
-  }
-
   if (err.code && typeof err.code === 'string') {
     switch (err.code) {
       case '23505':
