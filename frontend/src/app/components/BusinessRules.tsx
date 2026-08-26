@@ -16,7 +16,7 @@ export default function BusinessRules() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section id="business-rules" style={{ padding: "96px 24px", background: "var(--bg-surface)", borderTop: "1px solid rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+    <section id="business-rules" style={{ padding: "96px 24px", background: "var(--bg-surface)", borderTop: "2px solid var(--border)", borderBottom: "2px solid var(--border)" }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "80px", alignItems: "start" }} className="rules-grid">
           {/* Left sticky header */}
@@ -28,20 +28,8 @@ export default function BusinessRules() {
             style={{ position: "sticky", top: "80px" }}
           >
             <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "7px",
-                background: "rgba(16,185,129,0.1)",
-                border: "1px solid rgba(16,185,129,0.2)",
-                borderRadius: "7px",
-                padding: "5px 12px",
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                color: "#10B981",
-                letterSpacing: "0.05em",
-                marginBottom: "22px",
-              }}
+              className="inline-flex items-center gap-[7px] rounded-[var(--radius-sm)] border-2 border-[var(--emerald)]/20 bg-[var(--emerald-light)] px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-[var(--emerald)]"
+              style={{ marginBottom: "22px" }}
             >
               <ShieldCheck size={13} weight="fill" />
               BUILT-IN RULES
@@ -55,12 +43,8 @@ export default function BusinessRules() {
             </p>
 
             <div
-              style={{
-                background: "rgba(16,185,129,0.08)",
-                border: "1px solid rgba(16,185,129,0.15)",
-                borderRadius: "14px",
-                padding: "22px 24px",
-              }}
+              className="rounded-[var(--radius-lg)] border-2 border-[var(--emerald)]/15 bg-[var(--emerald-light)]"
+              style={{ padding: "22px 24px" }}
             >
               <div style={{ fontSize: "2rem", fontWeight: 800, color: "#10B981", letterSpacing: "-0.04em", marginBottom: "4px" }}>6 Rules</div>
               <div style={{ fontSize: "0.875rem", color: "rgba(16,185,129,0.7)", fontWeight: 500 }}>
@@ -79,11 +63,8 @@ export default function BusinessRules() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, amount: 0.15 }}
                 transition={{ duration: 0.5, delay: i * 0.07, ease: [0.23, 1, 0.32, 1] }}
-                className="card-hover"
+                className="card-hover rounded-[var(--radius-lg)] border-2 border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]"
                 style={{
-                  background: "var(--bg-card)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  borderRadius: "12px",
                   padding: "18px 20px",
                   display: "flex",
                   gap: "14px",
@@ -91,7 +72,7 @@ export default function BusinessRules() {
                   cursor: "default",
                 }}
               >
-                <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "rgba(16,185,129,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "#10B981", flexShrink: 0, marginTop: "1px" }}>
+                <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[var(--radius-sm)] border-2 border-[var(--emerald)]/20 bg-[var(--emerald-light)] text-[var(--emerald)]" style={{ marginTop: "1px" }}>
                   <CheckCircle size={14} weight="fill" />
                 </div>
                 <div>

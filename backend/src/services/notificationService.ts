@@ -35,7 +35,7 @@ export class NotificationService {
           `SELECT id, user_id, title, message, status, notification_type, entity_type, entity_id, read_at, created_at, updated_at
            FROM notifications
            WHERE deleted_at IS NULL
-             AND ($1::text IS NULL OR status = $1)
+              AND ($1::text IS NULL OR status = $1::notification_status)
              AND ($2::text IS NULL OR notification_type = $2)
            ORDER BY created_at DESC
            LIMIT 100`,
@@ -45,8 +45,8 @@ export class NotificationService {
           `SELECT m.id, m.vehicle_id, v.registration_number, m.type, m.scheduled_date
            FROM maintenance_records m
            INNER JOIN vehicles v ON v.id = m.vehicle_id
-           WHERE status IN ('scheduled', 'in_progress')
-             AND scheduled_date <= CURRENT_DATE + INTERVAL '7 days'
+           WHERE m.status IN ('scheduled', 'in_progress')
+              AND m.scheduled_date <= CURRENT_DATE + INTERVAL '7 days'
            ORDER BY scheduled_date ASC
            LIMIT 10`,
         ),
