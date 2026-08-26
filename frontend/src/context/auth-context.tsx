@@ -8,8 +8,9 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { login as apiLogin, logout as apiLogout, getMe } from "@/lib/auth-api";
-import type { AuthUser, LoginInput, AuthApiError } from "@/lib/auth-api";
+import { getMe } from "@/lib/auth-api";
+import { authClient } from "@/lib/auth-client";
+import type { AuthUser } from "@/lib/auth-api";
 import type { UserRole } from "@/utils/resolve-dashboard-route";
 
 interface AuthState {
@@ -20,10 +21,7 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  login: (input: LoginInput) => Promise<
-    | { type: "must-change-password" }
-    | { type: "success"; user: AuthUser }
-  >;
+  signInWithGoogle: (intent?: "login" | "signup") => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -56,30 +54,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [refresh]);
 
-  const login = useCallback(
-    async (input: LoginInput) => {
-      const result = await apiLogin(input);
+  // Google OAuth entry point. Intent is enforced SERVER-SIDE:
+  //   "login"  -> existing accounts only; unknown emails are rejected with
+  //               error=signup_disabled and no user is ever created.
+  //   "signup" -> brand-new emails only; an email that already belongs to a
+  //               TransitOps user is rejected with error=email_already_exists
+  //               BEFORE any session is created.
+  //
+  // callbackURL MUST be absolute: the post-Google redirect is served by the
+  // BACKEND origin, so relative paths would resolve against :5000.
+  const signInWithGoogle = useCallback(
+    async (intent: "login" | "signup" = "login") => {
+      const frontendOrigin =
+        typeof window === "undefined" ? "" : window.location.origin;
+      const callbackURL = new URL("/login", frontendOrigin);
+      if (intent === "signup") callbackURL.searchParams.set("intent", "signup");
+      const errorCallbackURL = new URL("/login", frontendOrigin);
+      errorCallbackURL.searchParams.set("error", "oauth");
 
-      if ("mustChangePassword" in result && result.mustChangePassword) {
-        return { type: "must-change-password" as const };
-      }
-
-      const user = await getMe();
-      setState({
-        authenticated: true,
-        loading: false,
-        user,
-        role: user.role as UserRole,
+      const result = await authClient.signIn.social({
+        provider: "google",
+        requestSignUp: intent === "signup",
+        callbackURL: callbackURL.toString(),
+        errorCallbackURL: errorCallbackURL.toString(),
       });
 
-      return { type: "success" as const, user };
+      if (result?.error) {
+        throw new Error(
+          result.error.message ||
+            "Google sign-in is unavailable right now. Please try again."
+        );
+      }
     },
     []
   );
 
   const logout = useCallback(async () => {
     try {
-      await apiLogout();
+      await authClient.signOut({ fetchOptions: { credentials: "include" } });
     } catch {
       // proceed with client-side logout even if API fails
     }
@@ -87,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, refresh }}>
+    <AuthContext.Provider value={{ ...state, signInWithGoogle, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   );

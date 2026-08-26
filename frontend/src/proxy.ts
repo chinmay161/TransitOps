@@ -2,84 +2,139 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { resolveDashboardRoute } from "./utils/resolve-dashboard-route";
 
-const authPaths = ["/login", "/register", "/verify-email", "/change-password"];
+const API_BASE_URL =
+  process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-function decodeJwt(token: string) {
+// Better Auth session cookies (plain http and __Secure- prefixed https variant)
+const SESSION_COOKIE_NAMES = [
+  "better-auth.session_token",
+  "__Secure-better-auth.session_token",
+];
+
+const KNOWN_ROLES = ["admin", "fleet_manager", "dispatcher", "driver"];
+
+function hasSessionCookie(request: NextRequest): boolean {
+  return SESSION_COOKIE_NAMES.some((name) => request.cookies.get(name)?.value);
+}
+
+type SessionState =
+  | { state: "authenticated"; role: string }
+  | { state: "unauthenticated" }
+  | { state: "unknown" };
+
+// Verify the session server-to-server. Client state alone can never grant
+// access: the httpOnly Better Auth cookie must resolve to a live backend
+// session with a real TransitOps role.
+async function resolveSession(request: NextRequest): Promise<SessionState> {
+  if (!hasSessionCookie(request)) {
+    return { state: "unauthenticated" };
+  }
+
   try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
+    const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      headers: { cookie: request.headers.get("cookie") ?? "" },
+      cache: "no-store",
+    });
+
+    if (res.status === 401 || res.status === 403) {
+      return { state: "unauthenticated" };
+    }
+    if (!res.ok) {
+      return { state: "unknown" };
+    }
+
+    const body = await res.json().catch(() => null);
+    const role = body?.data?.role;
+    if (!role) {
+      return { state: "unauthenticated" };
+    }
+    return { state: "authenticated", role };
   } catch {
-    return null;
+    return { state: "unknown" };
   }
 }
 
-export function proxy(request: NextRequest) {
+function clearSessionCookies(response: NextResponse): NextResponse {
+  for (const name of SESSION_COOKIE_NAMES) {
+    response.cookies.delete(name);
+  }
+  return response;
+}
+
+function redirectTo(request: NextRequest, path: string): NextResponse {
+  return NextResponse.redirect(new URL(path, request.url));
+}
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get("access_token")?.value;
 
   // Allow public landing page
   if (pathname === "/") {
     return NextResponse.next();
   }
 
-  const isAuthPage = authPaths.some((path) => pathname === path);
+  const session = await resolveSession(request);
 
-  if (isAuthPage) {
-    if (token) {
-      const decoded = decodeJwt(token);
-      const target = resolveDashboardRoute(decoded?.role || "");
-      return NextResponse.redirect(new URL(target, request.url));
+  // Holding page for Google users without an assigned TransitOps role
+  if (pathname === "/pending") {
+    if (session.state !== "authenticated") {
+      return clearSessionCookies(redirectTo(request, "/login"));
+    }
+    if (KNOWN_ROLES.includes(session.role)) {
+      return redirectTo(request, resolveDashboardRoute(session.role));
     }
     return NextResponse.next();
   }
 
-  // If it's a private page and user has no token, redirect to /login
-  if (!token) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // Auth pages: signed-in users go straight to their destination
+  if (pathname === "/login") {
+    if (session.state === "authenticated") {
+      if (!KNOWN_ROLES.includes(session.role)) {
+        return redirectTo(request, "/pending");
+      }
+      return redirectTo(request, resolveDashboardRoute(session.role));
+    }
+    return NextResponse.next();
+  }
+
+  // Private pages require a verified session
+  if (session.state !== "authenticated") {
+    const target =
+      session.state === "unknown" ? "/login?error=server" : "/login";
+    return clearSessionCookies(redirectTo(request, target));
+  }
+
+  const role = session.role;
+
+  // Users without a usable role are held on the pending page
+  if (!KNOWN_ROLES.includes(role)) {
+    return redirectTo(request, "/pending");
   }
 
   // Enforce role-based client routing constraints
-  const decoded = decodeJwt(token);
-  if (!decoded || !decoded.role) {
-    // If token is invalid or corrupt, redirect to login
-    const response = NextResponse.redirect(new URL("/login", request.url));
-    response.cookies.delete("access_token");
-    return response;
-  }
-
-  const role = decoded.role;
-
   if (role === "driver") {
     const allowed = ["/dashboard", "/fuel-log", "/expenses", "/notifications"];
-    const isAllowed = allowed.some((path) => pathname === path || pathname.startsWith(path + "/"));
+    const isAllowed = allowed.some(
+      (path) => pathname === path || pathname.startsWith(path + "/")
+    );
     if (!isAllowed) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return redirectTo(request, "/dashboard");
     }
   } else if (role === "dispatcher") {
     const allowed = ["/drivers", "/trips", "/notifications"];
-    const isAllowed = allowed.some((path) => pathname === path || pathname.startsWith(path + "/"));
+    const isAllowed = allowed.some(
+      (path) => pathname === path || pathname.startsWith(path + "/")
+    );
     if (!isAllowed) {
-      return NextResponse.redirect(new URL("/drivers", request.url));
+      return redirectTo(request, "/drivers");
     }
   } else if (role === "fleet_manager") {
     // Fleet managers can access everything except admin settings
-    if (pathname === "/admin-settings" || pathname.startsWith("/admin-settings/")) {
-      return NextResponse.redirect(new URL("/vehicles", request.url));
+    if (pathname.startsWith("/admin-settings")) {
+      return redirectTo(request, "/vehicles");
     }
   } else if (role === "admin") {
     // Admins have full access
-  } else {
-    // Unknown role
-    const response = NextResponse.redirect(new URL("/login", request.url));
-    response.cookies.delete("access_token");
-    return response;
   }
 
   return NextResponse.next();

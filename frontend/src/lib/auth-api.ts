@@ -49,84 +49,19 @@ async function request<T>(
   return body?.data ?? body;
 }
 
-export type LoginInput = { email: string; password: string };
-export type LoginResult =
-  | { user: unknown; mustChangePassword: false }
-  | { mustChangePassword: true };
-
-export async function login(input: LoginInput): Promise<LoginResult> {
-  return request<LoginResult>("/api/auth/login", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-
-export async function logout(): Promise<void> {
-  await request("/api/auth/logout", { method: "POST" });
-}
-
-export type RegisterInput = {
-  email: string;
-  password: string;
-  fullName: string;
-  phone?: string | null;
-};
-
-export async function registerDriver(input: RegisterInput): Promise<unknown> {
-  return request("/api/auth/register/driver", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-
-export async function registerDispatcher(
-  input: RegisterInput
-): Promise<unknown> {
-  return request("/api/auth/register/dispatcher", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-
-// MOCK EMAIL VERIFICATION (Hackathon Demo)
-export async function devVerifyEmail(email: string): Promise<unknown> {
-  return request("/api/auth/dev/verify-email", {
-    method: "POST",
-    body: JSON.stringify({ email }),
-  });
-}
-
-export async function verifyEmail(token: string): Promise<unknown> {
-  return request(`/api/auth/verify-email?token=${encodeURIComponent(token)}`);
-}
-
-export type ChangePasswordInput = {
-  currentPassword: string;
-  newPassword: string;
-};
-
-export async function changePassword(
-  input: ChangePasswordInput
-): Promise<unknown> {
-  return request("/api/auth/change-password", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-
 export interface AuthUser {
   id: string;
   email: string;
   full_name: string;
   phone: string | null;
   role: string;
-  must_change_password: boolean;
   email_verified: boolean;
   is_active: boolean;
   created_at: string;
   driver_id?: string;
 }
 
+// Rich TransitOps profile for the Better Auth session user.
 export async function getMe(): Promise<AuthUser> {
   return request<AuthUser>("/api/auth/me");
 }
