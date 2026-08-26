@@ -1,15 +1,14 @@
--- Seed test user for login testing
--- Email: driver@transitops.com / Password: password123
+-- Seed test user for local development
+-- Identity is provisioned via Google OAuth: this row simply pre-registers
+-- an account so that signing in with a matching Google email links to it.
 
-INSERT INTO users (id, email, password_hash, full_name, phone, role, must_change_password, email_verified, is_active, created_at, updated_at)
+INSERT INTO users (id, email, full_name, phone, role, email_verified, is_active, created_at, updated_at)
 VALUES (
   gen_random_uuid(),
   'driver@transitops.com',
-  '$2b$12$x9pbMLHKzdV84JhZ1Qj.eefsW3tX7SESfmSluZoT/JQAM6XfudKYC',
   'Test Driver',
   '+1234567890',
   'driver',
-  FALSE,
   TRUE,
   TRUE,
   NOW(),

@@ -9,6 +9,7 @@ import { FuelLogController } from "./controllers/fuelLogController";
 import { NotificationController } from "./controllers/notificationController";
 import { ReportController } from "./controllers/reportController";
 import { ensureAdminSettingsSchema } from "./db/ensureAdminSettingsSchema";
+import { ensureBetterAuthSchema } from "./db/ensureBetterAuthSchema";
 import { ensureEnterpriseOpsSchema } from "./db/ensureEnterpriseOpsSchema";
 import { ensureExpenseSchema } from "./db/ensureExpenseSchema";
 import { ensureFuelLogSchema } from "./db/ensureFuelLogSchema";
@@ -27,12 +28,18 @@ import { FuelLogService } from "./services/fuelLogService";
 import { NotificationService } from "./services/notificationService";
 import { ReportService } from "./services/reportService";
 import { ApiError, sendError } from "./utils/api";
-import { authRouter, authenticate, authorizeModule, authorize } from "./modules/auth/index.js";
+import { authMeRouter, authenticate, authorizeModule, authorize, auth } from "./modules/auth/index.js";
+import { toNodeHandler } from "better-auth/node";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 
-app.use(express.json({ limit: "10mb" }));
+// Better Auth parses its own request bodies; skip global JSON parsing for
+// its endpoints so the raw stream is preserved for the handler.
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api/auth")) return next();
+  express.json({ limit: "10mb" })(req, res, next);
+});
 app.use(cookieParser());
 
 // Add CORS middleware
@@ -344,16 +351,14 @@ app.post('/drivers', async (req: Request, res: Response) => {
   try {
     await client.query('BEGIN');
 
-    // 1. Insert into users
+    // 1. Insert into users (Google OAuth accounts carry no local password)
     const userQuery = `
-      INSERT INTO users (email, password_hash, full_name, phone, role, approval_status)
-      VALUES ($1, $2, $3, $4, 'driver', 'approved')
+      INSERT INTO users (email, full_name, phone, role, approval_status)
+      VALUES ($1, $2, $3, 'driver', 'approved')
       RETURNING id
     `;
-    const dummyPasswordHash = '$2b$10$EpjJN9wH0Zt1V6W7Ua9hL.c5YdE2W.oO8j9t6V7zUuK1Jc9e2b1qG'; // bcrypt hash for password123
     const userResult = await client.query(userQuery, [
       email.toLowerCase().trim(),
-      dummyPasswordHash,
       full_name.trim(),
       phone || null,
     ]);
@@ -1805,7 +1810,22 @@ app.delete('/trips/:id', async (req: Request, res: Response) => {
   }
 });
 
-app.use("/api/auth", authRouter);
+// Better Auth serves all authentication endpoints (Google OAuth sign-in,
+// session get, sign-out). The custom /me profile route must be registered
+// before the Better Auth catch-all handler.
+app.use("/api/auth", authMeRouter);
+const betterAuthHandler = toNodeHandler(auth);
+app.all("/api/auth/*", (req: Request, res: Response, next: NextFunction) => {
+  if (process.env.AUTH_DEBUG === "1") {
+    const hasState = Boolean((req.query as any).state);
+    console.log(
+      `[auth-diag] ba-entry ${req.method} ${req.path.split("?")[0]} state=${
+        hasState ? "present" : "absent"
+      }`
+    );
+  }
+  Promise.resolve(betterAuthHandler(req, res)).catch(next);
+});
 
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -1813,7 +1833,7 @@ app.get("/api/health", (_req: Request, res: Response) => {
 
 // 404 Not Found fallback for unmatched API routes
 app.use((req: Request, res: Response) => {
-  sendError(res, 404, "NOT_FOUND", `Endpoint ${req.method} ${req.originalUrl} not found`);
+  sendError(res, 404, `Endpoint ${req.method} ${req.originalUrl} not found`);
 });
 
 app.use(errorHandler);
@@ -1831,6 +1851,7 @@ async function startServer() {
   await ensureExpenseSchema(pool);
   await ensureAdminSettingsSchema(pool);
   await ensureEnterpriseOpsSchema(pool);
+  await ensureBetterAuthSchema(pool);
 
   app.listen(env.PORT, () => {
     console.log(`Server is running on port ${env.PORT}`);

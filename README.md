@@ -51,8 +51,7 @@ TransitOps provides role-based tools for fleet operations:
 - TypeScript
 - PostgreSQL
 - `pg`
-- JWT authentication
-- bcrypt
+- Better Auth (Google OAuth sessions)
 - Zod
 
 **Infrastructure**
@@ -79,18 +78,30 @@ TransitOps/
 docker compose up -d
 ```
 
+Or run everything at once from the repository root:
+
+```bash
+npm install
+npm run dev
+```
+
+This starts the backend (http://localhost:5000) and frontend (http://localhost:3000) together.
+
 ### 2. Configure Environment
 
-Create a `.env` file in the project root. You can use `.env.example` as a starting point.
-
-Important values:
+Create a `.env` file in the project root (see `.env.example`), or edit `backend/.env`. Important values:
 
 ```env
 DATABASE_URL=postgresql://postgres:password123@localhost:5439/transitops
 PORT=5000
-JWT_SECRET_KEY=replace-with-at-least-32-characters
+BETTER_AUTH_SECRET=generate-with-openssl-rand-hex-32
+BETTER_AUTH_URL=http://localhost:5000
 FRONTEND_URL=http://localhost:3000
+GOOGLE_CLIENT_ID=your-oauth-client-id
+GOOGLE_CLIENT_SECRET=your-oauth-client-secret
 ```
+
+Google OAuth is the only sign-in method. Create an OAuth client (Web application) in Google Cloud Console with redirect URI `http://localhost:5000/api/auth/callback/google`. New Google users start with a safe `pending` role until an admin assigns one. See `docs/AUTHENTICATION.md`.
 
 ### 3. Run Backend
 

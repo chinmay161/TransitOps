@@ -78,21 +78,24 @@ CREATE TYPE expense_category AS ENUM (
 -- =====================================================
 -- USERS
 -- =====================================================
--- Account creation flow:
---   Admin creates Fleet Managers (and other Admins).
---   Fleet Managers create Drivers and Dispatchers.
---   Every account is created by an existing authorized user (created_by FK).
+-- Account provisioning:
+--   All accounts are created exclusively through Google OAuth
+--   (Better Auth). New self-service signups receive the safe
+--   'pending' role until an admin assigns a real role.
 --
--- Password workflow:
---   New accounts start with must_change_password = TRUE.
---   On first login, the user is forced to set a new password.
---   password_changed_at records when the password was last changed.
---   After a successful password change, must_change_password is set to FALSE.
+-- Passwords:
+--   TransitOps has no password authentication. The password_hash
+--   column is nullable and retained only for backward compatibility
+--   with legacy rows; new accounts never set it.
+--
+-- Better Auth session/OAuth state lives in the dedicated
+-- sessions, accounts, and verifications tables (see
+-- backend/src/db/ensureBetterAuthSchema.ts).
 -- =====================================================
 CREATE TABLE users (
     id                      UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
     email                   VARCHAR(255)    NOT NULL,
-    password_hash           TEXT            NOT NULL,
+    password_hash           TEXT,
     full_name               VARCHAR(255)    NOT NULL,
     phone                   VARCHAR(50),
     role                    user_role       NOT NULL DEFAULT 'fleet_manager',
