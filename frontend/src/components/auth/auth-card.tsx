@@ -3,13 +3,8 @@ import type { ReactNode } from "react";
 export function AuthCard({ children }: { children: ReactNode }) {
   return (
     <div
-      className="rounded-2xl border"
-      style={{
-        padding: "32px",
-        background: "var(--bg-card)",
-        borderColor: "var(--border)",
-        boxShadow: "var(--shadow-card)",
-      }}
+      className="rounded-[var(--radius-lg)] border-2 border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]"
+      style={{ padding: "32px" }}
     >
       {children}
     </div>

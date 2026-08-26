@@ -31,11 +31,6 @@ export async function generateMetadata({
   };
 }
 
-// Dedicated terminal failure page for the server-side signup gate:
-// Sign Up attempted with a Google email that already belongs to a
-// TransitOps account. Rendered INSTEAD of the normal login UI - the
-// regular login card and OAuth button never enter the DOM for this error.
-
 export default async function LoginPage({
   searchParams,
 }: {
@@ -52,23 +47,13 @@ export default async function LoginPage({
       <AuthCard>
         <div className="text-center">
           <div
-            className="rounded-lg border px-5 py-6"
+            className="rounded-[var(--radius-md)] border-2 border-[var(--red)]/40 bg-[var(--red-light)] px-5 py-6"
             role="alert"
-            style={{
-              borderColor: "rgba(239, 68, 68, 0.45)",
-              background: "rgba(239, 68, 68, 0.08)",
-            }}
           >
-            <h1
-              className="text-xl font-bold tracking-tight"
-              style={{ color: "var(--text-primary)" }}
-            >
+            <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
               Account Already Exists
             </h1>
-            <p
-              className="mt-3 text-sm leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
+            <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
               This email ID is already linked with an existing TransitOps
               account. Kindly try logging in.
             </p>
@@ -77,14 +62,7 @@ export default async function LoginPage({
           <div className="mt-8">
             <Link
               href="/"
-              className="inline-flex w-full items-center justify-center rounded-lg text-sm font-semibold transition-all duration-200 hover:brightness-110"
-              style={{
-                padding: "10px 20px",
-                color: "#050A14",
-                background:
-                  "linear-gradient(135deg, #F5A623 0%, #D4891A 100%)",
-                boxShadow: "0 2px 10px rgba(245, 166, 35, 0.25)",
-              }}
+              className="btn-primary w-full text-sm"
             >
               Go to Home
             </Link>
@@ -103,23 +81,13 @@ export default async function LoginPage({
       <AuthCard>
         <div className="text-center">
           <div
-            className="rounded-lg border px-5 py-6"
+            className="rounded-[var(--radius-md)] border-2 border-[var(--amber)]/40 bg-[var(--amber-light)] px-5 py-6"
             role="alert"
-            style={{
-              borderColor: "rgba(245, 166, 35, 0.45)",
-              background: "rgba(245, 166, 35, 0.08)",
-            }}
           >
-            <h1
-              className="text-xl font-bold tracking-tight"
-              style={{ color: "var(--text-primary)" }}
-            >
+            <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
               Account Not Found
             </h1>
-            <p
-              className="mt-3 text-sm leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
+            <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
               This email ID is not linked with a TransitOps account. Please sign up first.
             </p>
           </div>
@@ -127,14 +95,7 @@ export default async function LoginPage({
           <div className="mt-8">
             <Link
               href="/"
-              className="inline-flex w-full items-center justify-center rounded-lg text-sm font-semibold transition-all duration-200 hover:brightness-110"
-              style={{
-                padding: "10px 20px",
-                color: "#050A14",
-                background:
-                  "linear-gradient(135deg, #F5A623 0%, #D4891A 100%)",
-                boxShadow: "0 2px 10px rgba(245, 166, 35, 0.25)",
-              }}
+              className="btn-primary w-full text-sm"
             >
               Go to Home
             </Link>
@@ -147,16 +108,10 @@ export default async function LoginPage({
   return (
     <>
       <div className="mb-8 text-center">
-        <h1
-          className="text-[22px] font-bold leading-tight tracking-tight"
-          style={{ color: "var(--text-primary)" }}
-        >
+        <h1 className="text-[22px] font-bold leading-tight tracking-tight text-[var(--text-primary)]">
           Sign in to TransitOps
         </h1>
-        <p
-          className="mt-2 text-sm leading-relaxed"
-          style={{ color: "var(--text-secondary)" }}
-        >
+        <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
           Manage your fleet, drivers, dispatchers and operations from one place.
         </p>
       </div>

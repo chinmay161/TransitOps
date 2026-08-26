@@ -52,8 +52,9 @@ export default function Modules() {
               transition={{ duration: 0.45, delay: i * 0.05, ease: [0.23, 1, 0.32, 1] }}
               style={{
                 background: "var(--bg-card)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderRadius: "14px",
+                border: "2px solid var(--border)",
+                borderRadius: "var(--radius-lg)",
+                boxShadow: "var(--shadow-card)",
                 padding: "24px 20px",
                 cursor: "default",
                 transition: "transform 200ms cubic-bezier(0.23,1,0.32,1), background 180ms ease, border-color 180ms ease, box-shadow 200ms ease",
@@ -63,24 +64,24 @@ export default function Modules() {
               }}
               onMouseEnter={(e) => {
                 const el = e.currentTarget as HTMLDivElement;
-                el.style.transform = "translateY(-4px)";
+                el.style.transform = "translate(-2px, -2px)";
                 el.style.background = "var(--bg-card-hover)";
                 el.style.borderColor = `${mod.color}40`;
-                el.style.boxShadow = `0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px ${mod.color}30`;
+                el.style.boxShadow = `4px 4px 0px ${mod.color}30`;
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget as HTMLDivElement;
                 el.style.transform = "translateY(0)";
                 el.style.background = "var(--bg-card)";
-                el.style.borderColor = "rgba(255,255,255,0.07)";
-                el.style.boxShadow = "none";
+                el.style.borderColor = "var(--border)";
+                el.style.boxShadow = "var(--shadow-card)";
               }}
             >
               <div
                 style={{
-                  width: "46px", height: "46px", borderRadius: "12px",
+                  width: "46px", height: "46px", borderRadius: "var(--radius-md)",
                   background: `${mod.color}14`,
-                  border: `1px solid ${mod.color}22`,
+                  border: `2px solid ${mod.color}22`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   color: mod.color,
                 }}

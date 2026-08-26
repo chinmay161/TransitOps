@@ -17,7 +17,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="text-sm font-medium text-[var(--text-secondary)]"
+            className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wide"
           >
             {label}
           </label>
@@ -28,12 +28,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             type={type}
             className={cn(
-              "w-full rounded-lg border bg-[var(--bg-surface)] px-3.5 py-2.5 text-sm text-[var(--text-primary)]",
+              "w-full rounded-[var(--radius-md)] border-2 bg-[var(--bg-surface)] px-3.5 py-2.5 text-sm text-[var(--text-primary)]",
               "placeholder:text-[var(--text-muted)]",
               "transition-colors duration-150",
-              "focus:outline-none focus:ring-2 focus:ring-[var(--amber)]/40 focus:border-[var(--amber)]",
+              "focus:outline-none focus:ring-3 focus:ring-[var(--amber)]/30 focus:border-[var(--amber)]",
               error
-                ? "border-[var(--red)] focus:ring-[var(--red)]/40 focus:border-[var(--red)]"
+                ? "border-[var(--red)] focus:ring-[var(--red)]/30 focus:border-[var(--red)]"
                 : "border-[var(--border)]",
               className
             )}
@@ -43,7 +43,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           />
         </div>
         {error && (
-          <p id={`${inputId}-error`} className="text-xs text-[var(--red)]">
+          <p id={`${inputId}-error`} className="text-xs text-[var(--red)] font-semibold">
             {error}
           </p>
         )}

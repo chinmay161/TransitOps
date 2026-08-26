@@ -23,8 +23,6 @@ export default function Navbar() {
     router.push("/");
   };
 
-  // Both entry points route through the Google OAuth flow; intent is enforced
-  // server-side (see backend better-auth.ts).
   const startGoogleFlow = (intent: "login" | "signup") => {
     void signInWithGoogle(intent).catch((err) => {
       console.error(err);
@@ -46,13 +44,12 @@ export default function Navbar() {
         display: "flex",
         alignItems: "center",
         background: scrolled
-          ? "rgba(7, 13, 26, 0.92)"
-          : "rgba(7, 13, 26, 0.6)",
-        backdropFilter: "blur(16px)",
+          ? "var(--bg-surface)"
+          : "var(--bg-base)",
         borderBottom: scrolled
-          ? "1px solid rgba(255,255,255,0.08)"
-          : "1px solid rgba(255,255,255,0.04)",
-        transition: "background 260ms ease, border-color 260ms ease",
+          ? "2px solid var(--border)"
+          : "2px solid var(--border-subtle)",
+        transition: "background 200ms ease, border-color 200ms ease",
       }}
     >
       <div
@@ -84,23 +81,24 @@ export default function Navbar() {
             style={{
               width: "32px",
               height: "32px",
-              borderRadius: "8px",
-              background: "linear-gradient(135deg, #F5A623 0%, #D4891A 100%)",
+              borderRadius: "6px",
+              background: "var(--amber)",
+              border: "2px solid #0B0F1A",
+              boxShadow: "3px 3px 0px rgba(0,0,0,0.5)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 2px 10px rgba(245,166,35,0.35)",
               flexShrink: 0,
             }}
           >
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <rect x="1" y="8" width="11" height="7" rx="1.5" fill="white" fillOpacity="0.95" />
-              <path d="M12 10h3.5l2.5 3v2H12V10z" fill="white" fillOpacity="0.85" />
-              <circle cx="5" cy="15.5" r="1.5" fill="#D4891A" />
-              <circle cx="14.5" cy="15.5" r="1.5" fill="#D4891A" />
+              <rect x="1" y="8" width="11" height="7" rx="1.5" fill="#0B0F1A" fillOpacity="0.7" />
+              <path d="M12 10h3.5l2.5 3v2H12V10z" fill="#0B0F1A" fillOpacity="0.6" />
+              <circle cx="5" cy="15.5" r="1.5" fill="#0B0F1A" fillOpacity="0.4" />
+              <circle cx="14.5" cy="15.5" r="1.5" fill="#0B0F1A" fillOpacity="0.4" />
             </svg>
           </div>
-          <span style={{ fontSize: "1rem", fontWeight: 700, color: "#F0F4FF", letterSpacing: "-0.02em" }}>
+          <span style={{ fontSize: "1rem", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
             TransitOps
           </span>
         </a>
@@ -114,52 +112,13 @@ export default function Navbar() {
               </span>
               <a
                 href={resolveDashboardRoute(user?.role || "")}
-                style={{
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  color: "#F0F4FF",
-                  textDecoration: "none",
-                  transition: "color 150ms ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "var(--amber)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#F0F4FF";
-                }}
+                className="text-sm font-bold text-[var(--text-primary)] no-underline transition-colors duration-150 hover:text-[var(--amber)]"
               >
                 Go to Dashboard
               </a>
               <button
                 onClick={handleLogout}
-                style={{
-                  padding: "8px 20px",
-                  borderRadius: "8px",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  color: "#EF4444",
-                  border: "1.5px solid rgba(239, 68, 68, 0.4)",
-                  background: "rgba(239, 68, 68, 0.04)",
-                  cursor: "pointer",
-                  transition: "all 200ms cubic-bezier(0.23, 1, 0.32, 1)",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLButtonElement;
-                  el.style.color = "#050A14";
-                  el.style.background = "#EF4444";
-                  el.style.borderColor = "#EF4444";
-                  el.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.2)";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLButtonElement;
-                  el.style.color = "#EF4444";
-                  el.style.background = "rgba(239, 68, 68, 0.04)";
-                  el.style.borderColor = "rgba(239, 68, 68, 0.4)";
-                  el.style.boxShadow = "none";
-                }}
+                className="rounded-[var(--radius-md)] border-2 border-[var(--red)]/40 bg-[var(--red-light)] px-5 py-2 text-sm font-bold text-[var(--red)] transition-all duration-100 hover:bg-[var(--red)] hover:text-white hover:border-[var(--red)] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_rgba(239,68,68,0.3)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
               >
                 Sign Out
               </button>
@@ -172,7 +131,6 @@ export default function Navbar() {
                 gap: "clamp(8px, 1.5vw, 14px)",
               }}
             >
-              {/* Secondary / outlined */}
               <a
                 href="/login"
                 id="nav-login"
@@ -182,43 +140,11 @@ export default function Navbar() {
                   e.preventDefault();
                   startGoogleFlow("login");
                 }}
-                style={{
-                  padding: "clamp(6px, 1.2vw, 8px) clamp(12px, 2.4vw, 20px)",
-                  borderRadius: "8px",
-                  fontSize: "clamp(0.78rem, 1.6vw, 0.875rem)",
-                  fontWeight: 600,
-                  color: "#F5A623",
-                  border: "1.5px solid rgba(245, 166, 35, 0.4)",
-                  background: "rgba(245, 166, 35, 0.04)",
-                  textDecoration: "none",
-                  whiteSpace: "nowrap",
-                  transition: "all 200ms cubic-bezier(0.23, 1, 0.32, 1)",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLAnchorElement;
-                  el.style.color = "#050A14";
-                  el.style.background = "#F5A623";
-                  el.style.borderColor = "#F5A623";
-                  el.style.transform = "translateY(-1px)";
-                  el.style.boxShadow = "0 4px 12px rgba(245, 166, 35, 0.2)";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLAnchorElement;
-                  el.style.color = "#F5A623";
-                  el.style.background = "rgba(245, 166, 35, 0.04)";
-                  el.style.borderColor = "rgba(245, 166, 35, 0.4)";
-                  el.style.transform = "none";
-                  el.style.boxShadow = "none";
-                }}
+                className="rounded-[var(--radius-md)] border-2 border-[var(--amber)]/40 bg-[var(--amber-light)] px-5 py-2 text-sm font-bold text-[var(--amber)] no-underline whitespace-nowrap transition-all duration-100 hover:bg-[var(--amber)] hover:text-[#0B0F1A] hover:border-[var(--amber)] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_rgba(245,166,35,0.3)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
               >
                 Login
               </a>
 
-              {/* Primary / accent-filled — signup intent; server rejects
-                  emails that already belong to a TransitOps account */}
               <a
                 href="/login"
                 id="nav-signup"
@@ -228,35 +154,7 @@ export default function Navbar() {
                   e.preventDefault();
                   startGoogleFlow("signup");
                 }}
-                style={{
-                  padding: "clamp(6px, 1.2vw, 8px) clamp(12px, 2.4vw, 20px)",
-                  borderRadius: "8px",
-                  fontSize: "clamp(0.78rem, 1.6vw, 0.875rem)",
-                  fontWeight: 600,
-                  color: "#050A14",
-                  border: "1.5px solid transparent",
-                  background:
-                    "linear-gradient(135deg, #F5A623 0%, #D4891A 100%)",
-                  boxShadow: "0 2px 10px rgba(245, 166, 35, 0.25)",
-                  textDecoration: "none",
-                  whiteSpace: "nowrap",
-                  transition: "all 200ms cubic-bezier(0.23, 1, 0.32, 1)",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLAnchorElement;
-                  el.style.transform = "translateY(-1px)";
-                  el.style.boxShadow = "0 6px 16px rgba(245, 166, 35, 0.35)";
-                  el.style.filter = "brightness(1.06)";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLAnchorElement;
-                  el.style.transform = "none";
-                  el.style.boxShadow = "0 2px 10px rgba(245, 166, 35, 0.25)";
-                  el.style.filter = "none";
-                }}
+                className="rounded-[var(--radius-md)] border-2 border-[#0B0F1A] bg-[var(--amber)] px-5 py-2 text-sm font-bold text-[#0B0F1A] no-underline whitespace-nowrap shadow-[var(--shadow-card)] transition-all duration-100 hover:bg-[var(--amber-dark)] hover:shadow-[var(--shadow-elevated)] hover:-translate-x-[2px] hover:-translate-y-[2px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
               >
                 Sign Up
               </a>

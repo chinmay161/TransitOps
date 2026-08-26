@@ -22,12 +22,8 @@ export default function Hero() {
       {/* Dot grid background */}
       <div
         className="dot-grid"
-        style={{ position: "absolute", inset: 0, opacity: 0.6, pointerEvents: "none" }}
+        style={{ position: "absolute", inset: 0, opacity: 0.5, pointerEvents: "none" }}
       />
-
-      {/* Ambient glows */}
-      <div className="glow-amber" style={{ width: "800px", height: "800px", top: "-200px", left: "50%", transform: "translateX(-50%)", opacity: 0.6 }} />
-      <div className="glow-emerald" style={{ width: "400px", height: "400px", bottom: "10%", right: "-100px" }} />
 
       <div
         style={{
@@ -43,7 +39,7 @@ export default function Hero() {
           paddingTop: "56px",
         }}
       >
-        {/* ── Headline + CTAs ───────────────────────────────────── */}
+        {/* Headline + CTAs */}
         <div
           style={{
             display: "flex",
@@ -65,11 +61,11 @@ export default function Hero() {
               fontWeight: 800,
               letterSpacing: "-0.035em",
               lineHeight: 1.1,
-              color: "#F0F4FF",
+              color: "var(--text-primary)",
             }}
           >
             Smart Transport Operations,{" "}
-            <span className="text-gradient-amber">Built for Modern</span>{" "}
+            <span className="text-[var(--amber)]">Built for Modern</span>{" "}
             Fleet Management.
           </motion.h1>
 

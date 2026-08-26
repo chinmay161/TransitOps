@@ -5,7 +5,7 @@ function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
-        "rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]",
+        "rounded-[var(--radius-lg)] border-2 border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]",
         className
       )}
       {...props}
@@ -23,7 +23,7 @@ function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) 
   return (
     <h2
       className={cn(
-        "text-xl font-semibold text-[var(--text-primary)] tracking-tight",
+        "text-xl font-bold text-[var(--text-primary)] tracking-tight",
         className
       )}
       {...props}

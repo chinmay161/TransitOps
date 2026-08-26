@@ -20,7 +20,6 @@ export function ModuleShell({
 
   const dashboardSlug = role ? resolveDashboardRoute(role).substring(1) : "login";
 
-  // Filter tabs based on role permissions
   const allTabs = [
     { slug: dashboardSlug, label: "dashboard" },
     { slug: "expenses", label: "expenses" },
@@ -40,7 +39,6 @@ export function ModuleShell({
     if (role === "fleet_manager") {
       return [dashboardSlug, "expenses", "reports", "notifications", "users"].includes(tab.slug);
     }
-    // admin sees all
     return true;
   });
 
@@ -51,16 +49,16 @@ export function ModuleShell({
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-[#070D1A] px-4 pb-16 pt-24 text-[#F0F4FF] md:px-8">
+      <main className="min-h-screen bg-[var(--bg-base)] px-4 pb-16 pt-24 text-[var(--text-primary)] md:px-8">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-          <section className="rounded-[28px] border border-white/8 bg-[#0D1526] p-6">
+          <section className="rounded-[var(--radius-xl)] border-2 border-[var(--border)] bg-[var(--bg-surface)] p-6 shadow-[var(--shadow-card)]">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                 {uniqueAllowedTabs.map((tab) => (
                   <Link
                     key={tab.slug}
                     href={`/${tab.slug}`}
-                    className="rounded-full border border-white/8 bg-white/[0.03] px-4 py-2 text-sm text-[#C7D2E6] hover:bg-white/[0.08]"
+                    className="rounded-[var(--radius-md)] border-2 border-[var(--border)] bg-[var(--bg-card)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] transition-all duration-100 hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_rgba(0,0,0,0.4)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
                   >
                     {tab.label}
                   </Link>

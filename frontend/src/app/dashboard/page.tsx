@@ -176,7 +176,7 @@ export default function DriverDashboardPage() {
   if (role !== "driver") {
     return (
       <ModuleShell title="Unauthorized">
-        <div className="card-base bg-[#0D1526] p-8 text-center border-red-500/20">
+        <div className="card-base bg-[var(--bg-surface)] p-8 text-center border-[var(--red)]/20">
           <Warning size={42} className="text-[var(--red)] mx-auto mb-3" />
           <h3 className="font-bold text-[var(--text-primary)]">Access Denied</h3>
           <p className="text-xs text-[var(--text-secondary)] max-w-md mx-auto mt-1 mb-4">
@@ -201,10 +201,7 @@ export default function DriverDashboardPage() {
         {/* Left / Middle Columns - Active Trip & Lists */}
         <div className="lg:col-span-2 flex flex-col gap-6">
           {/* Active Trip Section */}
-          <div className="rounded-[24px] border border-white/8 bg-gradient-to-b from-[#0D1526] to-[#0A0F1D] p-6 shadow-xl relative overflow-hidden">
-            {/* Background Glow */}
-            <div className="absolute -right-24 -top-24 w-48 h-48 bg-[var(--amber-light)] blur-[64px] rounded-full" />
-            
+          <div className="rounded-[var(--radius-lg)] border-2 border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-card)] relative overflow-hidden">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-bold tracking-tight text-[var(--text-primary)] flex items-center gap-2">
                 <NavigationArrow size={20} className="text-[var(--amber)]" weight="fill" /> Active Assignment
@@ -215,7 +212,7 @@ export default function DriverDashboardPage() {
                   In Progress
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border border-white/10 bg-white/5 text-[var(--text-secondary)]">
+                <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border-2 border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-secondary)]">
                   No Active Trip
                 </span>
               )}
@@ -225,7 +222,7 @@ export default function DriverDashboardPage() {
               <div className="flex flex-col gap-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Origin */}
-                  <div className="flex items-start gap-3 bg-white/[0.02] p-4 rounded-xl border border-white/5">
+                  <div className="flex items-start gap-3 bg-[var(--bg-surface)] p-4 rounded-[var(--radius-lg)] border-2 border-[var(--border-subtle)]">
                     <MapPin size={24} className="text-[var(--amber)] mt-1" weight="duotone" />
                     <div>
                       <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)]">Start Location</span>
@@ -234,7 +231,7 @@ export default function DriverDashboardPage() {
                   </div>
 
                   {/* Destination */}
-                  <div className="flex items-start gap-3 bg-white/[0.02] p-4 rounded-xl border border-white/5">
+                  <div className="flex items-start gap-3 bg-[var(--bg-surface)] p-4 rounded-[var(--radius-lg)] border-2 border-[var(--border-subtle)]">
                     <MapPin size={24} className="text-[var(--emerald)] mt-1" weight="duotone" />
                     <div>
                       <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)]">Destination</span>
@@ -243,7 +240,7 @@ export default function DriverDashboardPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/[0.02] p-4 rounded-xl border border-white/5">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[var(--bg-surface)] p-4 rounded-[var(--radius-lg)] border-2 border-[var(--border-subtle)]">
                   <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
                     <Clock size={16} />
                     <span>
@@ -259,13 +256,13 @@ export default function DriverDashboardPage() {
                       placeholder="Final Odometer"
                       value={odometerInput}
                       onChange={(e) => setOdometerInput(e.target.value)}
-                      className="bg-[#070D1A] border border-white/10 rounded-lg px-3 py-2 text-xs text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--amber)] transition-colors w-full md:w-32"
+                      className="bg-[var(--bg-base)] border-2 border-[var(--border)] rounded-[var(--radius-md)] px-3 py-2 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--amber)] focus:ring-3 focus:ring-[var(--amber)]/20 transition-colors w-full md:w-32"
                     />
                     <button
                       onClick={() => handleCompleteTrip(activeTrip.id)}
                       disabled={submittingTrip === activeTrip.id}
-                      className="btn-primary text-xs !py-2 shadow-md w-full md:w-auto"
-                      style={{ background: "var(--emerald)", boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)" }}
+                      className="btn-primary text-xs !py-2 shadow-[var(--shadow-card)] w-full md:w-auto"
+                      style={{ background: "var(--emerald)", boxShadow: "var(--shadow-card)" }}
                     >
                       {submittingTrip === activeTrip.id ? <Spinner className="animate-spin" size={14} /> : <Flag size={14} weight="bold" />}
                       Complete Trip
@@ -274,7 +271,7 @@ export default function DriverDashboardPage() {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-10 bg-white/[0.01] border border-dashed border-white/8 rounded-xl">
+              <div className="text-center py-10 bg-[var(--bg-surface)] border-2 border-dashed border-[var(--border)] rounded-[var(--radius-lg)]">
                 <MapPin size={38} className="text-[var(--text-muted)] mx-auto mb-2" />
                 <h3 className="text-sm font-bold text-[var(--text-primary)]">Ready for Dispatch</h3>
                 <p className="text-xs text-[var(--text-secondary)] mt-1 max-w-xs mx-auto">
@@ -285,9 +282,9 @@ export default function DriverDashboardPage() {
           </div>
 
           {/* Details / Tab List Section */}
-          <div className="rounded-[24px] border border-white/8 bg-[#0D1526] p-6 shadow-xl">
+          <div className="rounded-[var(--radius-lg)] border-2 border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-card)]">
             {/* Custom Tab Selector */}
-            <div className="flex border-b border-white/5 mb-6 gap-6 text-xs md:text-sm font-semibold">
+            <div className="flex border-b-2 border-[var(--border-subtle)] mb-6 gap-6 text-xs md:text-sm font-semibold">
               <button
                 onClick={() => setActiveTab("trips")}
                 className={`pb-3 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
@@ -328,7 +325,7 @@ export default function DriverDashboardPage() {
                   {dashboardData?.todays_trips && dashboardData.todays_trips.filter(t => t.status === "scheduled").map((trip) => (
                     <div
                       key={trip.id}
-                      className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-colors gap-4"
+                      className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border border-[var(--border-subtle)] bg-white/[0.01] hover:bg-white/[0.02] transition-colors gap-4"
                     >
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
@@ -363,7 +360,7 @@ export default function DriverDashboardPage() {
                       <h4 className="text-xs uppercase font-bold text-[var(--text-secondary)] tracking-wider mb-3">Upcoming Schedules</h4>
                       <div className="flex flex-col gap-3">
                         {dashboardData.upcoming_trips.map((trip) => (
-                          <div key={trip.id} className="p-3 bg-white/[0.01] border border-white/5 rounded-lg flex justify-between items-center text-xs">
+                          <div key={trip.id} className="p-3 bg-white/[0.01] border border-[var(--border-subtle)] rounded-lg flex justify-between items-center text-xs">
                             <span className="font-semibold text-[var(--text-primary)]">{trip.origin} → {trip.destination}</span>
                             <span className="text-[var(--text-secondary)]">{new Date(trip.scheduled_start).toLocaleDateString()}</span>
                           </div>
@@ -394,7 +391,7 @@ export default function DriverDashboardPage() {
                     {dashboardData?.fuel_logs && dashboardData.fuel_logs.map((log) => (
                       <div
                         key={log.id}
-                        className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.01] text-xs"
+                        className="flex items-center justify-between p-4 rounded-xl border border-[var(--border-subtle)] bg-white/[0.01] text-xs"
                       >
                         <div className="flex flex-col gap-1">
                           <span className="font-bold text-[var(--text-primary)]">{log.fuel_station_name}</span>
@@ -426,7 +423,7 @@ export default function DriverDashboardPage() {
                     <div
                       key={notif.id}
                       className={`p-4 rounded-xl border text-xs flex gap-3 items-start ${
-                        notif.status === "unread" ? "border-amber-500/25 bg-amber-500/[0.02]" : "border-white/5 bg-white/[0.01]"
+                        notif.status === "unread" ? "border-amber-500/25 bg-amber-500/[0.02]" : "border-[var(--border-subtle)] bg-white/[0.01]"
                       }`}
                     >
                       <CheckCircle className={`mt-0.5 ${notif.status === "unread" ? "text-[var(--amber)]" : "text-[var(--text-muted)]"}`} size={16} />
@@ -451,9 +448,9 @@ export default function DriverDashboardPage() {
         {/* Right Sidebar Column - Driver Profile & Quick Stats */}
         <div className="flex flex-col gap-6">
           {/* Driver Profile Summary Widget */}
-          <div className="rounded-[24px] border border-white/8 bg-[#0D1526] p-6 shadow-xl flex flex-col items-center text-center">
+          <div className="rounded-[var(--radius-lg)] border-2 border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-card)] flex flex-col items-center text-center">
             <div className="relative mb-3">
-              <div className="w-16 h-16 rounded-full bg-[#162440] flex items-center justify-center text-[var(--amber)] font-black text-lg uppercase border border-white/10">
+              <div className="w-16 h-16 rounded-full bg-[var(--bg-surface)] flex items-center justify-center text-[var(--amber)] font-black text-lg uppercase border-2 border-[var(--border)]">
                 {user?.full_name?.substring(0, 2) || "DR"}
               </div>
               {verificationData?.verified ? (
@@ -489,7 +486,7 @@ export default function DriverDashboardPage() {
 
             {/* Unverified Call to Action Button */}
             {!verificationData?.verified && (
-              <div className="mt-4 w-full pt-3 border-t border-white/5">
+              <div className="mt-4 w-full pt-3 border-t border-[var(--border-subtle)]">
                 <p className="text-[11px] text-[#6B7FA3] mb-2">Driver license verification pending</p>
                 <button
                   onClick={() => setIsVerifyModalOpen(true)}
@@ -502,7 +499,7 @@ export default function DriverDashboardPage() {
             )}
 
             {verificationData?.verified && verificationData.record && (
-              <div className="mt-4 w-full pt-3 border-t border-white/5 text-[10px] text-[#6B7FA3] space-y-1 text-left">
+              <div className="mt-4 w-full pt-3 border-t border-[var(--border-subtle)] text-[10px] text-[#6B7FA3] space-y-1 text-left">
                 <div className="flex justify-between">
                   <span>DigiLocker Ref:</span>
                   <span className="text-[#F0F4FF] font-mono">{verificationData.record.verification_id?.slice(0, 14)}</span>
@@ -518,11 +515,11 @@ export default function DriverDashboardPage() {
           </div>
 
           {/* Quick Metrics Widget */}
-          <div className="rounded-[24px] border border-white/8 bg-[#0D1526] p-6 shadow-xl">
+          <div className="rounded-[var(--radius-lg)] border-2 border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-card)]">
             <h3 className="text-xs uppercase font-bold text-[var(--text-secondary)] tracking-wider mb-4">Performance Metrics</h3>
             <div className="flex flex-col gap-4">
               {/* Stat 1 */}
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
+              <div className="flex justify-between items-center py-2 border-b-2 border-[var(--border-subtle)]">
                 <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5">
                   <RoadHorizon size={14} /> Trips Completed
                 </span>
@@ -532,7 +529,7 @@ export default function DriverDashboardPage() {
               </div>
 
               {/* Stat 2 */}
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
+              <div className="flex justify-between items-center py-2 border-b border-[var(--border-subtle)]">
                 <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5">
                   <GasPump size={14} /> Refuelings Logged
                 </span>

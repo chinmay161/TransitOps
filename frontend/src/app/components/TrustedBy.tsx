@@ -48,8 +48,8 @@ export default function TrustedBy() {
       style={{
         padding: "48px 0",
         background: "var(--bg-surface)",
-        borderTop: "1px solid rgba(255,255,255,0.06)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        borderTop: "2px solid var(--border)",
+        borderBottom: "2px solid var(--border)",
         overflow: "hidden",
       }}
     >

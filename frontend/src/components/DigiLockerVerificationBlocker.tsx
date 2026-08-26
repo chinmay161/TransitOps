@@ -122,19 +122,19 @@ export function DigiLockerModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          className="absolute inset-0 bg-black/80"
         />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="card-base w-full max-w-md bg-[#0D1526] p-6 z-10 shadow-2xl relative border-white/10"
+          className="card-base w-full max-w-md bg-[var(--bg-card)] p-6 z-10 shadow-[var(--shadow-elevated)] relative border-2 border-[var(--border)]"
         >
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-[#6B7FA3] hover:text-white transition-colors p-1"
+            className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors p-1"
           >
             <X size={18} />
           </button>
@@ -148,26 +148,26 @@ export function DigiLockerModal({
               
               <div className="space-y-1">
                 {step === "connecting" && (
-                  <h3 className="font-extrabold text-sm text-[#F0F4FF] tracking-wide uppercase">Connecting...</h3>
+                  <h3 className="font-extrabold text-sm text-[var(--text-primary)] tracking-wide uppercase">Connecting...</h3>
                 )}
                 {step === "authenticating" && (
-                  <h3 className="font-extrabold text-sm text-[#F0F4FF] tracking-wide uppercase">Authenticating...</h3>
+                  <h3 className="font-extrabold text-sm text-[var(--text-primary)] tracking-wide uppercase">Authenticating...</h3>
                 )}
                 {step === "retrieving" && (
-                  <h3 className="font-extrabold text-sm text-[#F0F4FF] tracking-wide uppercase">Retrieving License...</h3>
+                  <h3 className="font-extrabold text-sm text-[var(--text-primary)] tracking-wide uppercase">Retrieving License...</h3>
                 )}
                 {step === "verifying" && (
-                  <h3 className="font-extrabold text-sm text-[#F0F4FF] tracking-wide uppercase">Verifying...</h3>
+                  <h3 className="font-extrabold text-sm text-[var(--text-primary)] tracking-wide uppercase">Verifying...</h3>
                 )}
-                <p className="text-[11px] text-[#6B7FA3]">DigiLocker Government Gateway Integration</p>
+                <p className="text-[11px] text-[var(--text-secondary)]">DigiLocker Government Gateway Integration</p>
               </div>
               
               {/* Progress steps indicator */}
-              <div className="max-w-xs mx-auto flex items-center justify-between text-[10px] text-[#6B7FA3] font-bold pt-4">
+              <div className="max-w-xs mx-auto flex items-center justify-between text-[10px] text-[var(--text-muted)] font-bold pt-4">
                 <span className={step !== "connecting" ? "text-[#10B981]" : "text-[#F5A623] animate-pulse"}>Auth</span>
-                <span className="w-6 h-px bg-white/10" />
+                <span className="w-6 h-px bg-[var(--border)]" />
                 <span className={step === "retrieving" || step === "verifying" ? "text-[#F5A623] animate-pulse" : step === "connecting" || step === "authenticating" ? "opacity-30" : "text-[#10B981]"}>Fetch</span>
-                <span className="w-6 h-px bg-white/10" />
+                <span className="w-6 h-px bg-[var(--border)]" />
                 <span className={step === "verifying" ? "text-[#F5A623] animate-pulse" : "opacity-30"}>Match</span>
               </div>
             </div>
@@ -299,32 +299,32 @@ export function DigiLockerVerificationBlocker() {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#070D1A] dot-grid">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-base)] dot-grid">
         <div className="absolute inset-0 bg-radial-at-c from-[#0D1E3D]/50 via-transparent to-transparent pointer-events-none" />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="card-base max-w-lg w-full bg-[#0D1526] p-8 text-center border-white/5 shadow-2xl relative z-10 space-y-6"
+          className="card-base max-w-lg w-full bg-[var(--bg-card)] p-8 text-center border-2 border-[var(--border)] shadow-[var(--shadow-elevated)] relative z-10 space-y-6"
         >
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#F5A623] to-[#D4891A] flex items-center justify-center mx-auto shadow-lg text-white">
+          <div className="w-16 h-16 rounded-[var(--radius-lg)] bg-[var(--amber)] border-2 border-[#0B0F1A] shadow-[var(--shadow-card)] flex items-center justify-center mx-auto text-[#0B0F1A]">
             <Fingerprint size={32} weight="duotone" />
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-xl md:text-2xl font-black text-[#F0F4FF] tracking-tight">
+            <h1 className="text-xl md:text-2xl font-black text-[var(--text-primary)] tracking-tight">
               Welcome to TransitOps
             </h1>
-            <p className="text-xs md:text-sm text-[#6B7FA3] max-w-sm mx-auto leading-relaxed">
+            <p className="text-xs md:text-sm text-[var(--text-secondary)] max-w-sm mx-auto leading-relaxed">
               To ensure compliance and secure active trip assignments, every driver must verify their driving license through DigiLocker before dashboard access.
             </p>
           </div>
 
-          <div className="bg-[#111E35] border border-white/5 rounded-lg p-4 max-w-md mx-auto flex items-center justify-between text-left text-xs">
+          <div className="bg-[var(--bg-surface)] border-2 border-[var(--border-subtle)] rounded-[var(--radius-md)] p-4 max-w-md mx-auto flex items-center justify-between text-left text-xs">
             <div>
-              <div className="text-[10px] text-[#F5A623] font-bold uppercase tracking-wider">Demo Mode Session</div>
-              <div className="text-[#F0F4FF] font-semibold mt-0.5">{driverName}</div>
-              <div className="text-[#6B7FA3] font-mono text-[10px] mt-0.5">License: {driverLicenseNumber}</div>
+              <div className="text-[10px] text-[var(--amber)] font-bold uppercase tracking-wider">Demo Mode Session</div>
+              <div className="text-[var(--text-primary)] font-semibold mt-0.5">{driverName}</div>
+              <div className="text-[var(--text-secondary)] font-mono text-[10px] mt-0.5">License: {driverLicenseNumber}</div>
             </div>
             <span className="px-2.5 py-1 text-[9px] font-extrabold text-[#F5A623] bg-[#F5A623]/10 border border-[#F5A623]/20 rounded uppercase">
               Verification Required
@@ -334,14 +334,14 @@ export function DigiLockerVerificationBlocker() {
           <div className="pt-2">
             <button
               onClick={() => setModalOpen(true)}
-              className="w-full btn-primary py-3 flex items-center justify-center gap-2 text-sm font-bold shadow-lg shadow-[#F5A623]/10 hover:shadow-[#F5A623]/20 transition-all"
+              className="w-full btn-primary py-3 flex items-center justify-center gap-2 text-sm font-bold shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-all"
             >
               <span>Verify with DigiLocker</span>
               <ArrowRight size={16} weight="bold" />
             </button>
           </div>
 
-          <div className="text-[10px] font-semibold text-[#3A4F73] flex items-center justify-center gap-1.5">
+          <div className="text-[10px] font-semibold text-[var(--text-muted)] flex items-center justify-center gap-1.5">
             <span>Secure Gov Verification</span>
             <span>•</span>
             <span className="text-[#F5A623]">Mock DigiLocker Integration</span>

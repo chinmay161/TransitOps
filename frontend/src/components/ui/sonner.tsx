@@ -9,9 +9,10 @@ export function Toaster() {
       toastOptions={{
         style: {
           background: "var(--bg-card)",
-          border: "1px solid var(--border)",
+          border: "2px solid var(--border)",
           color: "var(--text-primary)",
-          borderRadius: "12px",
+          borderRadius: "var(--radius-md)",
+          boxShadow: "var(--shadow-card)",
           fontFamily: "var(--font-geist), 'Inter', system-ui, sans-serif",
         },
       }}

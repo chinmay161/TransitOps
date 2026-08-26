@@ -5,11 +5,13 @@ import { cn } from "@/lib/utils";
 
 const variants = {
   primary:
-    "bg-[var(--amber)] text-[#0D0D0D] font-semibold shadow-[0_1px_4px_rgba(245,166,35,0.28)] hover:bg-[var(--amber-dark)] hover:shadow-[var(--shadow-amber)] hover:-translate-y-[1px] active:scale-[0.97] active:shadow-none",
+    "bg-[var(--amber)] text-[#0B0F1A] font-bold border-2 border-[#0B0F1A] shadow-[var(--shadow-card)] hover:bg-[var(--amber-dark)] hover:shadow-[var(--shadow-elevated)] hover:-translate-x-[2px] hover:-translate-y-[2px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
   ghost:
-    "bg-[rgba(255,255,255,0.06)] text-[var(--text-primary)] border border-[var(--border)] hover:bg-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.14)] hover:-translate-y-[1px] active:scale-[0.97]",
+    "bg-[var(--bg-surface)] text-[var(--text-primary)] border-2 border-[var(--border)] hover:bg-[var(--bg-card)] hover:border-[var(--border-strong)] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_rgba(0,0,0,0.4)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none",
+  danger:
+    "bg-[var(--red)] text-white font-bold border-2 border-[#0B0F1A] shadow-[var(--shadow-card)] hover:brightness-110 hover:shadow-[var(--shadow-elevated)] hover:-translate-x-[2px] hover:-translate-y-[2px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
   outline:
-    "border border-[var(--border)] text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.06)] active:scale-[0.97]",
+    "border-2 border-[var(--border)] text-[var(--text-primary)] bg-transparent hover:bg-[var(--bg-surface)] hover:border-[var(--border-strong)] active:translate-x-[1px] active:translate-y-[1px]",
 };
 
 const sizes = {
@@ -42,10 +44,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-lg cursor-pointer",
-          "transition-all duration-150 ease-[var(--ease-out)]",
-          "disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
+          "inline-flex items-center justify-center gap-2 cursor-pointer rounded-[var(--radius-md)]",
+          "transition-all duration-100 ease-linear",
+          "disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none",
           "select-none",
+          "focus-visible:outline-3 focus-visible:outline-[var(--amber)] focus-visible:outline-offset-2",
           variants[variant],
           sizes[size],
           className

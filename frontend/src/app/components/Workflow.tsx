@@ -20,7 +20,7 @@ export default function Workflow() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section id="workflow" style={{ padding: "96px 24px", background: "var(--bg-surface)", borderTop: "1px solid rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+    <section id="workflow" style={{ padding: "96px 24px", background: "var(--bg-surface)", borderTop: "2px solid var(--border)", borderBottom: "2px solid var(--border)" }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 20 }}
@@ -47,7 +47,7 @@ export default function Workflow() {
               left: "calc(100% / 14)",
               right: "calc(100% / 14)",
               height: "1px",
-              background: "linear-gradient(to right, #F5A623, #8B5CF6)",
+              background: "var(--amber)",
               opacity: 0.25,
             }}
             className="workflow-line"
@@ -71,14 +71,14 @@ export default function Workflow() {
                     height: "48px",
                     borderRadius: "50%",
                     background: `${step.color}14`,
-                    border: `1.5px solid ${step.color}40`,
+                    border: `2px solid ${step.color}40`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     color: step.color,
                     position: "relative",
                     zIndex: 1,
-                    boxShadow: `0 0 16px ${step.color}20`,
+                    boxShadow: `2px 2px 0px ${step.color}30`,
                     flexShrink: 0,
                   }}
                 >
@@ -91,9 +91,9 @@ export default function Workflow() {
                       right: "-6px",
                       width: "18px",
                       height: "18px",
-                      borderRadius: "50%",
+                      borderRadius: "var(--radius-sm)",
                       background: step.color,
-                      color: "#050A14",
+                      color: "#0B0F1A",
                       fontSize: "0.6rem",
                       fontWeight: 800,
                       display: "flex",

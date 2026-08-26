@@ -34,7 +34,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable}`} style={{ colorScheme: "dark" }}>
-      <body style={{ fontFamily: "var(--font-geist), 'Inter', system-ui, sans-serif", background: "#070D1A" }}>
+      <body style={{ fontFamily: "var(--font-geist), 'Inter', system-ui, sans-serif", background: "var(--bg-base)" }}>
         <ErrorBoundary>
           <AuthProvider>
             {children}

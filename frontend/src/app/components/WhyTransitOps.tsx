@@ -37,11 +37,11 @@ export default function WhyTransitOps() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-          style={{ borderRadius: "16px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}
+          style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", border: "2px solid var(--border)", boxShadow: "var(--shadow-card)" }}
         >
           {/* Header */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "var(--bg-card)" }}>
-            <div style={{ padding: "16px 24px", fontSize: "0.8125rem", fontWeight: 700, color: "var(--text-muted)", borderRight: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: "7px" }}>
+            <div style={{ padding: "16px 24px", fontSize: "0.8125rem", fontWeight: 700, color: "var(--text-muted)", borderRight: "2px solid var(--border)", display: "flex", alignItems: "center", gap: "7px" }}>
               <X size={13} weight="bold" color="#EF4444" /> Traditional Management
             </div>
             <div style={{ padding: "16px 24px", fontSize: "0.8125rem", fontWeight: 700, color: "#10B981", display: "flex", alignItems: "center", gap: "7px" }}>
@@ -56,9 +56,9 @@ export default function WhyTransitOps() {
               whileInView={{ opacity: 1 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.35, delay: i * 0.06 }}
-              style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderTop: "1px solid rgba(255,255,255,0.05)" }}
+              style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderTop: "2px solid var(--border)" }}
             >
-              <div style={{ padding: "18px 24px", fontSize: "0.875rem", color: "var(--text-muted)", borderRight: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", gap: "10px", background: i % 2 === 0 ? "var(--bg-card)" : "rgba(255,255,255,0.02)" }}>
+              <div style={{ padding: "18px 24px", fontSize: "0.875rem", color: "var(--text-muted)", borderRight: "2px solid var(--border-subtle)", display: "flex", alignItems: "center", gap: "10px", background: i % 2 === 0 ? "var(--bg-card)" : "rgba(255,255,255,0.02)" }}>
                 <div style={{ width: "18px", height: "18px", borderRadius: "50%", background: "rgba(239,68,68,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <X size={9} weight="bold" color="#EF4444" />
                 </div>

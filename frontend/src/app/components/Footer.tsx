@@ -6,8 +6,8 @@ export default function Footer() {
   return (
     <footer
       style={{
-        background: "#040810",
-        borderTop: "1px solid rgba(255,255,255,0.06)",
+        background: "var(--bg-base)",
+        borderTop: "2px solid var(--border)",
         padding: "60px 24px",
         display: "flex",
         flexDirection: "column",
@@ -32,25 +32,27 @@ export default function Footer() {
             style={{
               width: "28px",
               height: "28px",
-              borderRadius: "7px",
-              background: "linear-gradient(135deg, #F5A623 0%, #D4891A 100%)",
+              borderRadius: "6px",
+              background: "var(--amber)",
+              border: "2px solid #0B0F1A",
+              boxShadow: "2px 2px 0px rgba(0,0,0,0.5)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <rect x="1" y="8" width="11" height="7" rx="1.5" fill="white" fillOpacity="0.95" />
-              <path d="M12 10h3.5l2.5 3v2H12V10z" fill="white" fillOpacity="0.85" />
-              <circle cx="5" cy="15.5" r="1.5" fill="#D4891A" />
-              <circle cx="14.5" cy="15.5" r="1.5" fill="#D4891A" />
+              <rect x="1" y="8" width="11" height="7" rx="1.5" fill="#0B0F1A" fillOpacity="0.7" />
+              <path d="M12 10h3.5l2.5 3v2H12V10z" fill="#0B0F1A" fillOpacity="0.6" />
+              <circle cx="5" cy="15.5" r="1.5" fill="#0B0F1A" fillOpacity="0.4" />
+              <circle cx="14.5" cy="15.5" r="1.5" fill="#0B0F1A" fillOpacity="0.4" />
             </svg>
           </div>
           <span
             style={{
               fontSize: "0.9375rem",
-              fontWeight: 700,
-              color: "#F0F4FF",
+              fontWeight: 800,
+              color: "var(--text-primary)",
               letterSpacing: "-0.02em",
             }}
           >
