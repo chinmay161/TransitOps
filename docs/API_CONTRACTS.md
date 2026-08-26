@@ -197,94 +197,52 @@ Full-text search applied to relevant text columns (defined per endpoint).
 
 ## Authentication
 
+Authentication is handled by Better Auth with Google OAuth as the only provider.
+Sessions are server-side (PostgreSQL) with httpOnly signed cookies — no JWTs.
+
 ### Endpoints
 
 | Method | URL | Description |
 |---|---|---|
-| `POST` | `/auth/login` | Authenticate with email + password |
-| `POST` | `/auth/refresh` | Exchange a valid token for a new one |
-| `POST` | `/auth/logout` | Invalidate current token |
-| `GET` | `/auth/me` | Return current authenticated user profile |
+| `POST` | `/api/auth/sign-in/social` | Start Google OAuth (`{ "provider": "google", "callbackURL": "..." }`) → returns redirect URL |
+| `GET` | `/api/auth/callback/google` | Google OAuth callback (handled by Better Auth) |
+| `POST` | `/api/auth/sign-out` | Delete the current session and clear cookies |
+| `GET` | `/api/auth/get-session` | Return the raw Better Auth session (or `null`) |
+| `GET` | `/api/auth/me` | Return the TransitOps profile of the authenticated user |
 
-### POST /auth/login
+### GET /api/auth/me
 
-**Request Body:**
-
-```json
-{
-    "email": "admin@transitops.com",
-    "password": "your-password"
-}
-```
-
-**Validation Rules:**
-
-| Field | Rule |
-|---|---|
-| `email` | Required, valid email format |
-| `password` | Required, minimum 8 characters |
+**Cookies:** Better Auth session cookie (httpOnly). No `Authorization` header is used.
 
 **Success Response (200):**
 
 ```json
 {
+    "success": true,
     "data": {
-        "token": "eyJhbGciOiJIUzI1NiIs...",
-        "expires_at": "2026-07-13T10:00:00Z",
-        "user": {
-            "id": "550e8400-e29b-41d4-a716-446655440000",
-            "email": "admin@transitops.com",
-            "full_name": "Admin User",
-            "role": "admin",
-            "is_active": true
-        }
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "email": "admin@gmail.com",
+        "full_name": "Admin User",
+        "phone": "+1234567890",
+        "role": "admin",
+        "email_verified": true,
+        "is_active": true,
+        "created_at": "2026-07-01T00:00:00Z"
     }
 }
 ```
+
+Drivers additionally include `"driver_id": "<drivers.id>"`.
 
 **Error Responses:**
 
 | Code | Condition |
 |---|---|
-| 401 | Invalid email or password |
-| 401 | Account is deactivated (`is_active = false`) |
-| 422 | Missing or invalid email/password format |
+| 401 | No valid session |
+| 401 | Account deactivated (`is_active = false`) |
 
-### POST /auth/refresh
-
-**Request Headers:** `Authorization: Bearer <token>`
-
-**Success Response (200):**
-
-```json
-{
-    "data": {
-        "token": "eyJhbGciOiJIUzI1NiIs...",
-        "expires_at": "2026-07-13T12:00:00Z"
-    }
-}
-```
-
-### GET /auth/me
-
-**Request Headers:** `Authorization: Bearer <token>`
-
-**Success Response (200):**
-
-```json
-{
-    "data": {
-        "id": "550e8400-e29b-41d4-a716-446655440000",
-        "email": "admin@transitops.com",
-        "full_name": "Admin User",
-        "phone": "+1234567890",
-        "role": "admin",
-        "is_active": true,
-        "last_login": "2026-07-12T09:30:00Z",
-        "created_at": "2026-07-01T00:00:00Z"
-    }
-}
-```
+New Google users are created automatically with role `pending`; module APIs then return
+403 until an admin assigns a role. Existing users matched by email keep their role.
 
 ---
 
@@ -296,26 +254,24 @@ Full-text search applied to relevant text columns (defined per endpoint).
 |---|---|---|
 | `id` | UUID | PK |
 | `email` | VARCHAR(255) | NOT NULL, UNIQUE |
-| `password_hash` | TEXT | NOT NULL (write-only) |
 | `full_name` | VARCHAR(255) | NOT NULL |
 | `phone` | VARCHAR(50) | Optional, regex validated |
-| `role` | ENUM(user_role) | NOT NULL |
+| `role` | ENUM(user_role) | NOT NULL (`pending` until an admin assigns a role) |
 | `is_active` | BOOLEAN | NOT NULL, DEFAULT true |
-| `last_login` | TIMESTAMPTZ | Nullable |
+| `created_at` | TIMESTAMPTZ | NOT NULL |
+
+Identity is provisioned via Google OAuth (Better Auth); there is no password field in active use.
 
 ### Endpoints
 
 | Method | URL | Auth | Roles |
 |---|---|---|---|
-| `GET` | `/users` | Required | admin, fleet_manager |
-| `GET` | `/users/{id}` | Required | admin, fleet_manager |
-| `POST` | `/users` | Required | admin |
-| `PATCH` | `/users/{id}` | Required | admin |
-| `DELETE` | `/users/{id}` | Required | admin |
+| `GET` | `/api/users` | Required | admin, fleet_manager |
 
 ### GET /users
 
-**Query Parameters:** `page`, `per_page`, `sort`, `filter[role]`, `filter[is_active]`, `q`
+Returns all user accounts (admin & fleet_manager only). Roles are assigned by an admin
+(`UPDATE users SET role = ...`); there is no self-service registration.
 
 **Success Response (200):**
 
@@ -328,41 +284,15 @@ Full-text search applied to relevant text columns (defined per endpoint).
             "full_name": "John Doe",
             "phone": "+1234567890",
             "role": "driver",
+            "email_verified": true,
             "is_active": true,
-            "last_login": "2026-07-11T14:00:00Z",
-            "created_at": "2026-07-01T00:00:00Z",
-            "updated_at": "2026-07-11T14:00:00Z"
+            "approval_status": "approved",
+            "last_login": null,
+            "created_at": "2026-07-01T00:00:00Z"
         }
-    ],
-    "meta": { "page": 1, "per_page": 25, "total": 10, "total_pages": 1 }
+    ]
 }
 ```
-
-### POST /users
-
-**Request Body:**
-
-```json
-{
-    "email": "newdriver@example.com",
-    "password": "StrongPass1!",
-    "full_name": "Jane Smith",
-    "phone": "+1234567890",
-    "role": "driver"
-}
-```
-
-**Validation Rules:**
-
-| Field | Rule |
-|---|---|
-| `email` | Required, valid email, must be unique |
-| `password` | Required, min 8 chars, must contain uppercase, lowercase, digit, special char |
-| `full_name` | Required, max 255 chars |
-| `phone` | Optional, must match `^\+?[0-9\s\-\(\)]{7,20}$` |
-| `role` | Required, must be valid `user_role` ENUM value |
-
-**Success Response (201):** Returns the created user object (without `password_hash`).
 
 ---
 
@@ -899,7 +829,7 @@ Default: **1000 requests per 15-minute window** per authenticated user.
 
 | Header | Required | Description |
 |---|---|---|
-| `Authorization` | Yes (except `/auth/login`) | `Bearer <jwt_token>` |
+| `Cookie` | Yes (protected endpoints) | Better Auth session cookie (set automatically by the browser) |
 | `Content-Type` | Yes (for requests with body) | `application/json` |
 | `Accept` | No | `application/json` (default) |
 | `X-Request-Id` | No | Client-generated idempotency key |

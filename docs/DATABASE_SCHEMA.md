@@ -49,7 +49,6 @@ erDiagram
     users {
         uuid id PK
         varchar email UK
-        text password_hash
         varchar full_name
         varchar phone
         enum user_role
@@ -185,22 +184,25 @@ erDiagram
 
 ### `users`
 
-**Purpose:** Stores system-wide user accounts. Every person who interacts with the system has an entry here. The `role` column determines access permissions. `password_hash` stores a bcrypt hash (variable length, hence `TEXT`).
+**Purpose:** Stores system-wide user accounts. Every person who interacts with the system has an entry here. The `role` column determines access permissions. Accounts are provisioned exclusively through Google OAuth (Better Auth); Better Auth also manages the `sessions`, `accounts`, and `verifications` tables that reference `users(id)`. New self-service signups receive the safe `pending` role until an admin assigns a real role.
 
 **Columns:**
 
 | Column | Type | Constraints | Description |
 |---|---|---|---|
-| `id` | `UUID` | `PK DEFAULT gen_random_uuid()` | Primary key |
-| `email` | `VARCHAR(255)` | `NOT NULL UNIQUE` | User email address (login identifier) |
-| `password_hash` | `TEXT` | `NOT NULL` | Bcrypt password hash |
-| `full_name` | `VARCHAR(255)` | `NOT NULL` | Display name |
+| `id` | `UUID` | `PK DEFAULT gen_random_uuid()` | Primary key (stable across auth changes — all modules FK to it) |
+| `email` | `VARCHAR(255)` | `NOT NULL UNIQUE` | User email address (Google account email; lookup/link key) |
+| `full_name` | `VARCHAR(255)` | `NOT NULL` | Display name (from Google profile on signup) |
 | `phone` | `VARCHAR(50)` | — | Contact number; validated via regex CHECK |
-| `role` | `user_role` | `NOT NULL` | System role (admin, fleet_manager, dispatcher, driver) |
+| `role` | `user_role` | `NOT NULL` | System role (admin, fleet_manager, dispatcher, driver, pending) |
+| `email_verified` | `BOOLEAN` | `NOT NULL DEFAULT false` | Email verification status (Google accounts are verified) |
 | `is_active` | `BOOLEAN` | `NOT NULL DEFAULT true` | Account disabled flag |
-| `last_login` | `TIMESTAMPTZ` | — | Timestamp of most recent successful login |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT now()` | Row creation timestamp |
 | `updated_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT now()` | Row last-update timestamp |
+
+Legacy password/verification columns (`password_hash` when present, `email_verification_*`,
+`must_change_password`) are unused by the application and kept only for backward compatibility.
+Better Auth session/OAuth state lives in the dedicated `sessions`, `accounts`, and `verifications` tables.
 
 **Primary Key:** `id`
 

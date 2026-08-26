@@ -8,7 +8,7 @@ import { resolveDashboardRoute } from "@/utils/resolve-dashboard-route";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const { authenticated, user, logout } = useAuth();
+  const { authenticated, user, logout, signInWithGoogle } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -21,6 +21,14 @@ export default function Navbar() {
   const handleLogout = async () => {
     await logout();
     router.push("/");
+  };
+
+  // Both entry points route through the Google OAuth flow; intent is enforced
+  // server-side (see backend better-auth.ts).
+  const startGoogleFlow = (intent: "login" | "signup") => {
+    void signInWithGoogle(intent).catch((err) => {
+      console.error(err);
+    });
   };
 
   return (
@@ -157,42 +165,102 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <a
-              href="/login"
-              id="nav-login"
+            <div
               style={{
-                padding: "8px 20px",
-                borderRadius: "8px",
-                fontSize: "0.875rem",
-                fontWeight: 600,
-                color: "#F5A623",
-                border: "1.5px solid rgba(245, 166, 35, 0.4)",
-                background: "rgba(245, 166, 35, 0.04)",
-                textDecoration: "none",
-                transition: "all 200ms cubic-bezier(0.23, 1, 0.32, 1)",
-                display: "inline-flex",
+                display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLAnchorElement;
-                el.style.color = "#050A14";
-                el.style.background = "#F5A623";
-                el.style.borderColor = "#F5A623";
-                el.style.transform = "translateY(-1px)";
-                el.style.boxShadow = "0 4px 12px rgba(245, 166, 35, 0.2)";
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLAnchorElement;
-                el.style.color = "#F5A623";
-                el.style.background = "rgba(245, 166, 35, 0.04)";
-                el.style.borderColor = "rgba(245, 166, 35, 0.4)";
-                el.style.transform = "none";
-                el.style.boxShadow = "none";
+                gap: "clamp(8px, 1.5vw, 14px)",
               }}
             >
-              Login
-            </a>
+              {/* Secondary / outlined */}
+              <a
+                href="/login"
+                id="nav-login"
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.preventDefault();
+                  startGoogleFlow("login");
+                }}
+                style={{
+                  padding: "clamp(6px, 1.2vw, 8px) clamp(12px, 2.4vw, 20px)",
+                  borderRadius: "8px",
+                  fontSize: "clamp(0.78rem, 1.6vw, 0.875rem)",
+                  fontWeight: 600,
+                  color: "#F5A623",
+                  border: "1.5px solid rgba(245, 166, 35, 0.4)",
+                  background: "rgba(245, 166, 35, 0.04)",
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                  transition: "all 200ms cubic-bezier(0.23, 1, 0.32, 1)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.color = "#050A14";
+                  el.style.background = "#F5A623";
+                  el.style.borderColor = "#F5A623";
+                  el.style.transform = "translateY(-1px)";
+                  el.style.boxShadow = "0 4px 12px rgba(245, 166, 35, 0.2)";
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.color = "#F5A623";
+                  el.style.background = "rgba(245, 166, 35, 0.04)";
+                  el.style.borderColor = "rgba(245, 166, 35, 0.4)";
+                  el.style.transform = "none";
+                  el.style.boxShadow = "none";
+                }}
+              >
+                Login
+              </a>
+
+              {/* Primary / accent-filled — signup intent; server rejects
+                  emails that already belong to a TransitOps account */}
+              <a
+                href="/login"
+                id="nav-signup"
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.preventDefault();
+                  startGoogleFlow("signup");
+                }}
+                style={{
+                  padding: "clamp(6px, 1.2vw, 8px) clamp(12px, 2.4vw, 20px)",
+                  borderRadius: "8px",
+                  fontSize: "clamp(0.78rem, 1.6vw, 0.875rem)",
+                  fontWeight: 600,
+                  color: "#050A14",
+                  border: "1.5px solid transparent",
+                  background:
+                    "linear-gradient(135deg, #F5A623 0%, #D4891A 100%)",
+                  boxShadow: "0 2px 10px rgba(245, 166, 35, 0.25)",
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                  transition: "all 200ms cubic-bezier(0.23, 1, 0.32, 1)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.transform = "translateY(-1px)";
+                  el.style.boxShadow = "0 6px 16px rgba(245, 166, 35, 0.35)";
+                  el.style.filter = "brightness(1.06)";
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.transform = "none";
+                  el.style.boxShadow = "0 2px 10px rgba(245, 166, 35, 0.25)";
+                  el.style.filter = "none";
+                }}
+              >
+                Sign Up
+              </a>
+            </div>
           )}
         </div>
       </div>
