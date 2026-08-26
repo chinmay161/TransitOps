@@ -19,8 +19,8 @@ export async function generateMetadata({
     : errorParam === EMAIL_ALREADY_EXISTS;
 
   const isAccountNotFound = Array.isArray(errorParam)
-    ? errorParam.includes(ACCOUNT_NOT_FOUND)
-    : errorParam === ACCOUNT_NOT_FOUND;
+    ? errorParam.includes("signup_disabled") || errorParam.includes("unable_to_create_user") || errorParam.includes(ACCOUNT_NOT_FOUND)
+    : errorParam === "signup_disabled" || errorParam === "unable_to_create_user" || errorParam === ACCOUNT_NOT_FOUND;
 
   return {
     title: isEmailExists
@@ -95,8 +95,8 @@ export default async function LoginPage({
   }
 
   const isAccountNotFound = Array.isArray(errorParam)
-    ? errorParam.includes(ACCOUNT_NOT_FOUND)
-    : errorParam === ACCOUNT_NOT_FOUND;
+    ? errorParam.includes("signup_disabled") || errorParam.includes("unable_to_create_user") || errorParam.includes(ACCOUNT_NOT_FOUND)
+    : errorParam === "signup_disabled" || errorParam === "unable_to_create_user" || errorParam === ACCOUNT_NOT_FOUND;
 
   if (isAccountNotFound) {
     return (

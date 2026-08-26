@@ -41,6 +41,8 @@ function authDebug(msg: string) {
   if (process.env.AUTH_DEBUG === '1') console.log('[auth-diag]', msg);
 }
 
+const intentCache = new Map<string, boolean>();
+
 type MaybeRequestContext = {
   request?: Request | null;
   query?: Record<string, unknown> | null;
@@ -116,6 +118,10 @@ export const auth = betterAuth({
       // However, because Better Auth consumes the state during parseState, it
       // may be lost before databaseHooks run. We set a cookie as a reliable backup.
       const path = (ctx as any).path as string | undefined;
+      require('fs').appendFileSync('better-auth-debug.log', JSON.stringify({ 
+        hasSetHeader: typeof (ctx as any).setHeader === 'function',
+        hasSetCookie: typeof (ctx as any).setCookie === 'function'
+      }) + '\n');
       if (path === '/sign-in/social') {
         const cb = (ctx.body as any)?.callbackURL;
         let signup = false;
@@ -131,43 +137,28 @@ export const auth = betterAuth({
         );
         if (signup) {
           await addOAuthServerContext({ signupIntent: true });
-          try {
-            if (typeof (ctx as any).setCookie === 'function') {
-              (ctx as any).setCookie('signup_intent', '1', {
-                maxAge: 15 * 60, // 15 minutes
-                httpOnly: true,
-                sameSite: 'lax',
-                path: '/',
-              });
-              (ctx as any).setCookie('login_intent', '', { maxAge: 0, path: '/' });
-            } else if (typeof (ctx as any).setHeader === 'function') {
-              (ctx as any).setHeader('Set-Cookie', [
-                'signup_intent=1; Max-Age=900; HttpOnly; SameSite=Lax; Path=/',
-                'login_intent=; Max-Age=0; HttpOnly; SameSite=Lax; Path=/'
-              ]);
-            }
-          } catch (err) {
-            authDebug(`Failed to set signup_intent cookie: ${err}`);
-          }
         } else {
-          // Login intent
+          // It's a login intent
+        }
+      }
+
+      if (path?.startsWith('/callback/')) {
+        const stateToken = (ctx.query as any)?.state;
+        if (stateToken) {
           try {
-            if (typeof (ctx as any).setCookie === 'function') {
-              (ctx as any).setCookie('login_intent', '1', {
-                maxAge: 15 * 60,
-                httpOnly: true,
-                sameSite: 'lax',
-                path: '/',
-              });
-              (ctx as any).setCookie('signup_intent', '', { maxAge: 0, path: '/' });
-            } else if (typeof (ctx as any).setHeader === 'function') {
-              (ctx as any).setHeader('Set-Cookie', [
-                'login_intent=1; Max-Age=900; HttpOnly; SameSite=Lax; Path=/',
-                'signup_intent=; Max-Age=0; HttpOnly; SameSite=Lax; Path=/'
-              ]);
+            const { rows } = await pool.query(
+              'SELECT value FROM verifications WHERE identifier = $1',
+              [stateToken]
+            );
+            if (rows.length > 0) {
+              const value = JSON.parse(rows[0].value);
+              const isLogin = value.requestSignUp !== true;
+              intentCache.set(stateToken, isLogin);
+              // Clean up to prevent memory leaks
+              setTimeout(() => intentCache.delete(stateToken), 5 * 60 * 1000);
             }
-          } catch (err) {
-            authDebug(`Failed to set login_intent cookie: ${err}`);
+          } catch (e) {
+            authDebug(`Failed to read verification for state ${stateToken}: ${e}`);
           }
         }
       }
@@ -177,6 +168,10 @@ export const auth = betterAuth({
     google: {
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
+      // Login intent never creates users: without requestSignUp=true the
+      // callback refuses implicit signup for unknown emails (error
+      // signup_disabled -> frontend shows Account Not Found).
+      disableImplicitSignUp: true,
     },
   },
   user: {
@@ -259,45 +254,51 @@ export const auth = betterAuth({
         // (Sign Up) or an unknown/non-OAuth context are the only ways a user
         // row is created here.
         before: async (_user, context) => {
-          const st = await readFlowState();
-          
-          let loginIntentCookie = false;
+          let stateToken = '';
           try {
-            const cookies = context?.request?.headers?.get('cookie') || '';
-            loginIntentCookie = cookies.includes('login_intent=1');
-          } catch (e) {}
+            const urlStr = context?.request?.url || '';
+            const match = urlStr.match(/[?&]state=([^&]+)/);
+            if (match) stateToken = match[1];
+          } catch {}
 
-          const isLoginIntent =
-            loginIntentCookie || (st !== null && st.requestSignUp !== true && !st.serverContext?.signupIntent);
-            
-          authDebug(
-            `user.create.before flowState=${
-              st ? 'present' : 'absent'
-            } loginIntent=${isLoginIntent}`
-          );
-          
-          if (isLoginIntent) {
+
+          if (stateToken && intentCache.get(stateToken)) {
+            authDebug(`user.create.before: Blocked creation for login intent (state=${stateToken})`);
             throw new APIError('BAD_REQUEST', {
               code: 'account_not_found',
-              message: 'This email ID is not linked with a TransitOps account. Please sign up first.',
             });
+          }
+
+          const st = await readFlowState();
+          const isLoginIntent = st !== null && st.requestSignUp !== true;
+          
+          authDebug(
+            `user.create.before flowState=${st ? 'present' : 'absent'} loginIntent=${isLoginIntent}`
+          );
+
+          if (isLoginIntent) {
+            authDebug(`user.create.before: Blocked creation via flowState`);
+            throw new APIError('BAD_REQUEST', {
+              code: 'account_not_found',
+            });
+          }
+          
+          // Strict fallback: if we have NO intent info, do not allow user creation on OAuth callback
+          // This ensures determinism. A real signup MUST have either intentCache or flowState.
+          if (!stateToken && st === null) {
+              const urlStr = context?.request?.url || '';
+              if (urlStr.includes('/callback/')) {
+                  authDebug(`user.create.before: Blocked creation due to unknown intent on callback`);
+                  throw new APIError('BAD_REQUEST', {
+                    code: 'account_not_found',
+                  });
+              }
           }
         },
         // Signup-intent flows record a durable fresh-user marker keyed by
         // their OAuth state token; the session gate below consumes it.
         after: async (user: any, context: any) => {
           if (!user?.id) return;
-          
-          // Fallback cleanup: if user was created despite login intent (adapter quirk), delete it
-          try {
-            const cookies = context?.request?.headers?.get('cookie') || '';
-            if (cookies.includes('login_intent=1')) {
-              authDebug(`user.create.after: Login intent detected for new user. Deleting user ${user.id}`);
-              await pool.query('DELETE FROM users WHERE id = $1', [user.id]);
-              return;
-            }
-          } catch (e) {}
-
           const st = await readFlowState();
           const signup = !!st?.serverContext?.signupIntent || st?.requestSignUp === true;
           authDebug(

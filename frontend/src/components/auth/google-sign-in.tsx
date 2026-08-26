@@ -16,7 +16,6 @@ const EMAIL_EXISTS_CODES = new Set([
   "unable_to_link_account",
   "email_exists",
 ]);
-const NO_ACCOUNT_CODES = new Set(["signup_disabled", "unable_to_create_user"]);
 
 function GoogleIcon() {
   return (
@@ -48,15 +47,14 @@ export function GoogleSignIn() {
 
   const errorParams = searchParams.getAll("error");
   const isEmailExistsError = errorParams.some(e => EMAIL_EXISTS_CODES.has(e));
-  const isNoAccountError = !isEmailExistsError && errorParams.some(e => NO_ACCOUNT_CODES.has(e));
 
   useEffect(() => {
-    if (errorParams.length > 0 && !isEmailExistsError && !isNoAccountError) {
+    if (errorParams.length > 0 && !isEmailExistsError) {
       toast.error(
         "Google sign-in failed or was cancelled. Please try again."
       );
     }
-  }, [errorParams.length, isEmailExistsError, isNoAccountError]);
+  }, [errorParams.length, isEmailExistsError]);
 
   async function handleGoogleFlow(intent: "login" | "signup") {
     setLoading(true);
@@ -105,36 +103,6 @@ export function GoogleSignIn() {
     );
   }
 
-  // TERMINAL STATE B: Log In attempted with a Google email that has no
-  // TransitOps account. Point the user at Sign Up instead.
-  if (isNoAccountError) {
-    return (
-      <div className="flex flex-col gap-5">
-        <div
-          className="rounded-lg border px-4 py-4 text-sm leading-relaxed"
-          role="alert"
-          style={{
-            borderColor: "rgba(245, 166, 35, 0.45)",
-            background: "rgba(245, 166, 35, 0.08)",
-            color: "var(--text-primary)",
-          }}
-        >
-          No TransitOps account exists for this Google email yet. Use Sign Up
-          to create one.
-        </div>
-
-        <Button
-          onClick={() => void handleGoogleFlow("signup")}
-          loading={loading}
-          size="lg"
-          className="w-full"
-        >
-          {loading ? "Redirecting to Google..." : "Sign Up"}
-          {!loading && <GoogleIcon />}
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-5">
