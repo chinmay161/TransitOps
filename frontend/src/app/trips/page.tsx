@@ -34,6 +34,7 @@ import {
 } from "@phosphor-icons/react";
 import { DemoSwitcher } from "../../components/DemoSwitcher";
 import { DigiLockerVerificationBlocker } from "../../components/DigiLockerVerificationBlocker";
+import { TransitOpsLogo } from "@/components/brand/TransitOpsLogo";
 
 const API_URL = "http://localhost:5000";
 
@@ -422,12 +423,7 @@ export default function TripManagementPage() {
       <header className="sticky top-0 z-40 bg-[#070D1A]/90 backdrop-blur-md border-b border-white/5 py-4 px-6 md:px-12 flex justify-between items-center">
         <a href="/" className="flex items-center gap-2 group text-decoration-none">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#F5A623] to-[#D4891A] flex items-center justify-center shadow-md">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <rect x="1" y="8" width="11" height="7" rx="1.5" fill="white" fillOpacity="0.95" />
-              <path d="M12 10h3.5l2.5 3v2H12V10z" fill="white" fillOpacity="0.85" />
-              <circle cx="5" cy="15.5" r="1.5" fill="#D4891A" />
-              <circle cx="14.5" cy="15.5" r="1.5" fill="#D4891A" />
-            </svg>
+            <TransitOpsLogo size={18} variant="white" />
           </div>
           <span className="font-bold text-[#F0F4FF] tracking-tight group-hover:text-[#F5A623] transition-colors">
             TransitOps

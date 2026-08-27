@@ -21,12 +21,17 @@ export const metadata: Metadata = {
   description:
     "Digitize your fleet operations with a centralized platform for vehicle management, driver tracking, dispatch, maintenance, fuel monitoring, and operational analytics.",
   keywords: ["fleet management", "transport operations", "vehicle tracking", "dispatch", "logistics software"],
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' }
+    ]
+  },
   openGraph: {
     title: "TransitOps — Smart Transport Operations Platform",
     description:
       "Centralized fleet management: vehicles, drivers, trips, maintenance, fuel & analytics in one intelligent platform.",
     type: "website",
-    },
+  },
 };
 
 export default function RootLayout({

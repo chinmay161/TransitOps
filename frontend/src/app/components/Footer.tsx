@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { TransitOpsLogo } from "@/components/brand/TransitOpsLogo";
 
 export default function Footer() {
   return (
@@ -27,33 +28,14 @@ export default function Footer() {
         }}
       >
         {/* Logo + Name */}
-        <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
-          <div
-            style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "6px",
-              background: "var(--amber)",
-              border: "2px solid #0B0F1A",
-              boxShadow: "2px 2px 0px rgba(0,0,0,0.5)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <rect x="1" y="8" width="11" height="7" rx="1.5" fill="#0B0F1A" fillOpacity="0.7" />
-              <path d="M12 10h3.5l2.5 3v2H12V10z" fill="#0B0F1A" fillOpacity="0.6" />
-              <circle cx="5" cy="15.5" r="1.5" fill="#0B0F1A" fillOpacity="0.4" />
-              <circle cx="14.5" cy="15.5" r="1.5" fill="#0B0F1A" fillOpacity="0.4" />
-            </svg>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <TransitOpsLogo size={20} />
           <span
             style={{
-              fontSize: "0.9375rem",
+              fontSize: "0.875rem",
               fontWeight: 800,
               color: "var(--text-primary)",
-              letterSpacing: "-0.02em",
+              letterSpacing: "-0.01em",
             }}
           >
             TransitOps
