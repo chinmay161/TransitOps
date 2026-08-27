@@ -3,13 +3,36 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { useAuth } from "@/context/auth-context";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { resolveDashboardRoute } from "@/utils/resolve-dashboard-route";
+import { TransitOpsLogo } from "@/components/brand/TransitOpsLogo";
+
+const DASHBOARD_ROUTES = [
+  "/dashboard",
+  "/vehicles",
+  "/drivers",
+  "/trips",
+  "/maintenance",
+  "/fuel-log",
+  "/expenses",
+  "/reports",
+  "/users",
+  "/admin-settings",
+  "/notifications",
+];
+
+function isDashboardRoute(pathname: string) {
+  return DASHBOARD_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(route + "/")
+  );
+}
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const { authenticated, user, logout, signInWithGoogle } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const onDashboard = isDashboardRoute(pathname);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 24);
@@ -72,33 +95,13 @@ export default function Navbar() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "9px",
+            gap: "6px",
             textDecoration: "none",
             flexShrink: 0,
           }}
         >
-          <div
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "6px",
-              background: "var(--amber)",
-              border: "2px solid #0B0F1A",
-              boxShadow: "3px 3px 0px rgba(0,0,0,0.5)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <rect x="1" y="8" width="11" height="7" rx="1.5" fill="#0B0F1A" fillOpacity="0.7" />
-              <path d="M12 10h3.5l2.5 3v2H12V10z" fill="#0B0F1A" fillOpacity="0.6" />
-              <circle cx="5" cy="15.5" r="1.5" fill="#0B0F1A" fillOpacity="0.4" />
-              <circle cx="14.5" cy="15.5" r="1.5" fill="#0B0F1A" fillOpacity="0.4" />
-            </svg>
-          </div>
-          <span style={{ fontSize: "1rem", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+          <TransitOpsLogo size={24} />
+          <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
             TransitOps
           </span>
         </a>
@@ -110,12 +113,14 @@ export default function Navbar() {
               <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 500, display: "none" }}>
                 Signed in as <strong style={{ color: "var(--text-primary)" }}>{user?.full_name}</strong>
               </span>
-              <a
-                href={resolveDashboardRoute(user?.role || "")}
-                className="text-sm font-bold text-[var(--text-primary)] no-underline transition-colors duration-150 hover:text-[var(--amber)]"
-              >
-                Go to Dashboard
-              </a>
+              {!onDashboard && (
+                <a
+                  href={resolveDashboardRoute(user?.role || "")}
+                  className="text-sm font-bold text-[var(--text-primary)] no-underline transition-colors duration-150 hover:text-[var(--amber)]"
+                >
+                  Go to Dashboard
+                </a>
+              )}
               <button
                 onClick={handleLogout}
                 className="rounded-[var(--radius-md)] border-2 border-[var(--red)]/40 bg-[var(--red-light)] px-5 py-2 text-sm font-bold text-[var(--red)] transition-all duration-100 hover:bg-[var(--red)] hover:text-white hover:border-[var(--red)] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_rgba(239,68,68,0.3)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
@@ -133,20 +138,6 @@ export default function Navbar() {
             >
               <a
                 href="/login"
-                id="nav-login"
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
-                  e.preventDefault();
-                  startGoogleFlow("login");
-                }}
-                className="rounded-[var(--radius-md)] border-2 border-[var(--amber)]/40 bg-[var(--amber-light)] px-5 py-2 text-sm font-bold text-[var(--amber)] no-underline whitespace-nowrap transition-all duration-100 hover:bg-[var(--amber)] hover:text-[#0B0F1A] hover:border-[var(--amber)] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_rgba(245,166,35,0.3)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
-              >
-                Login
-              </a>
-
-              <a
-                href="/login"
                 id="nav-signup"
                 role="button"
                 tabIndex={0}
@@ -157,6 +148,20 @@ export default function Navbar() {
                 className="rounded-[var(--radius-md)] border-2 border-[#0B0F1A] bg-[var(--amber)] px-5 py-2 text-sm font-bold text-[#0B0F1A] no-underline whitespace-nowrap shadow-[var(--shadow-card)] transition-all duration-100 hover:bg-[var(--amber-dark)] hover:shadow-[var(--shadow-elevated)] hover:-translate-x-[2px] hover:-translate-y-[2px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
               >
                 Sign Up
+              </a>
+
+              <a
+                href="/login"
+                id="nav-login"
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.preventDefault();
+                  startGoogleFlow("login");
+                }}
+                className="rounded-[var(--radius-md)] border-2 border-[var(--amber)]/40 bg-[var(--amber-light)] px-5 py-2 text-sm font-bold text-[var(--amber)] no-underline whitespace-nowrap transition-all duration-100 hover:bg-[var(--amber)] hover:text-[#0B0F1A] hover:border-[var(--amber)] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_rgba(245,166,35,0.3)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+              >
+                Login
               </a>
             </div>
           )}
