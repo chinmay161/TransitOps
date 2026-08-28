@@ -1845,22 +1845,33 @@ process.on("uncaughtException", (error: Error) => {
   console.error("[Process] Uncaught Exception:", error);
 });
 
-async function startServer() {
+const initPromise = (async () => {
   await ensureFuelLogSchema(pool);
   await ensureExpenseSchema(pool);
   await ensureAdminSettingsSchema(pool);
   await ensureEnterpriseOpsSchema(pool);
   await ensureBetterAuthSchema(pool);
+  await seedVehicles();
+})();
 
-  app.listen(env.PORT, () => {
-    console.log(`Server is running on port ${env.PORT}`);
-    seedVehicles();
+app.use(async (req, res, next) => {
+  try {
+    await initPromise;
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+if (!process.env.VERCEL) {
+  initPromise.then(() => {
+    app.listen(env.PORT, () => {
+      console.log(`Server is running on port ${env.PORT}`);
+    });
+  }).catch((error) => {
+    console.error("Failed to start server", error);
+    process.exit(1);
   });
 }
-
-void startServer().catch((error) => {
-  console.error("Failed to start server", error);
-  process.exit(1);
-});
 
 export default app;
