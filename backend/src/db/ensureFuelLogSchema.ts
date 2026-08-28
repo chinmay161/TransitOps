@@ -90,6 +90,7 @@ async function runStatement(pool: Pool, statement: string) {
     const message = error instanceof Error ? error.message : "";
     if (
       message.includes("already exists") ||
+      message.includes("does not exist") ||
       message.includes("constraint") ||
       message.includes("duplicate")
     ) {
