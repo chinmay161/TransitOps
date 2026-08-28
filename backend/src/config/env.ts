@@ -6,9 +6,11 @@ import { z } from 'zod';
 const rootEnvPath = path.resolve(__dirname, "../../../.env");
 const fallbackEnvPath = path.resolve(__dirname, "../../../.env.example");
 
-dotenv.config({
-  path: fs.existsSync(rootEnvPath) ? rootEnvPath : fallbackEnvPath,
-});
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({
+    path: fs.existsSync(rootEnvPath) ? rootEnvPath : fallbackEnvPath,
+  });
+}
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(5000),
