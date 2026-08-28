@@ -10,7 +10,8 @@ import pool from '../../config/database.js';
 // the same contract the rest of the app already consumes (userId, role, email).
 export async function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const session = await auth.api.getSession({
+    const authInstance = await auth;
+    const session = await authInstance.api.getSession({
       headers: fromNodeHeaders(req.headers),
     });
 

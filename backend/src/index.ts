@@ -28,7 +28,6 @@ import { NotificationService } from "./services/notificationService";
 import { ReportService } from "./services/reportService";
 import { ApiError, sendError } from "./utils/api";
 import { authMeRouter, authenticate, authorizeModule, authorize, auth } from "./modules/auth/index.js";
-import { toNodeHandler } from "better-auth/node";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -39,6 +38,8 @@ app.use((req, res, next) => {
   if (req.path.startsWith("/api/auth")) return next();
   express.json({ limit: "10mb" })(req, res, next);
 });
+app.use(cookieParser());
+
 app.use(cookieParser());
 
 // Add CORS middleware
@@ -1813,8 +1814,8 @@ app.delete('/trips/:id', async (req: Request, res: Response) => {
 // session get, sign-out). The custom /me profile route must be registered
 // before the Better Auth catch-all handler.
 app.use("/api/auth", authMeRouter);
-const betterAuthHandler = toNodeHandler(auth);
-app.all("/api/auth/*", (req: Request, res: Response, next: NextFunction) => {
+const betterAuthNodePkg = import("better-auth/node");
+app.all("/api/auth/*", async (req: Request, res: Response, next: NextFunction) => {
   if (process.env.AUTH_DEBUG === "1") {
     const hasState = Boolean((req.query as any).state);
     console.log(
@@ -1823,7 +1824,15 @@ app.all("/api/auth/*", (req: Request, res: Response, next: NextFunction) => {
       }`
     );
   }
-  Promise.resolve(betterAuthHandler(req, res)).catch(next);
+  
+  try {
+    const { toNodeHandler } = await betterAuthNodePkg;
+    const authInstance = await auth;
+    const betterAuthHandler = toNodeHandler(authInstance);
+    await betterAuthHandler(req, res);
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.get("/api/health", (_req: Request, res: Response) => {

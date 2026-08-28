@@ -1,5 +1,5 @@
-import { betterAuth, APIError } from 'better-auth';
-import { addOAuthServerContext, getOAuthState } from 'better-auth/api';
+const betterAuthPkg = import('better-auth');
+const betterAuthApiPkg = import('better-auth/api');
 import { pool } from '../../db/pool.js';
 import { env } from '../../config/env.js';
 
@@ -50,6 +50,7 @@ type MaybeRequestContext = {
 
 async function readFlowState() {
   try {
+    const { getOAuthState } = await betterAuthApiPkg;
     const st = (await getOAuthState()) as
       | {
           oauthState?: string;
@@ -101,8 +102,12 @@ async function consumeFreshSignupMarker(stateToken: string): Promise<void> {
   ]);
 }
 
-export const auth = betterAuth({
-  secret: env.BETTER_AUTH_SECRET,
+export const auth = (async () => {
+  const { betterAuth, APIError } = await betterAuthPkg;
+  const { addOAuthServerContext } = await betterAuthApiPkg;
+
+  return betterAuth({
+    secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
   trustedOrigins: [env.FRONTEND_URL],
   // Route all OAuth errors back to the frontend login screen so users see a
@@ -414,3 +419,4 @@ export const auth = betterAuth({
     },
   },
 });
+})();
