@@ -4,7 +4,6 @@
   "private": true,
   "description": "TransitOps monorepo — root tooling (frontend/ and backend/ keep their own package managers)",
   "scripts": {
-    "postinstall": "cd backend && pnpm install",
     "dev": "concurrently -k -n backend,frontend -c yellow,cyan \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
