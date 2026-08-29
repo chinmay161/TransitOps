@@ -123,10 +123,10 @@ export const auth = (async () => {
       // However, because Better Auth consumes the state during parseState, it
       // may be lost before databaseHooks run. We set a cookie as a reliable backup.
       const path = (ctx as any).path as string | undefined;
-      require('fs').appendFileSync('better-auth-debug.log', JSON.stringify({ 
+      authDebug(JSON.stringify({ 
         hasSetHeader: typeof (ctx as any).setHeader === 'function',
         hasSetCookie: typeof (ctx as any).setCookie === 'function'
-      }) + '\n');
+      }));
       if (path === '/sign-in/social') {
         const cb = (ctx.body as any)?.callbackURL;
         let signup = false;
