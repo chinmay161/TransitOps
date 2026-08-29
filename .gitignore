@@ -10,6 +10,7 @@ out/
 # Production build
 build/
 dist/
+backend/dist-ncc/
 
 # Python virtual environment
 venv/
@@ -35,6 +36,9 @@ pyvenv.cfg
 .env.production.local
 .env.*
 !.env.example
+backend/.env
+vercel-production.env
+!vercel-production.env.example
 
 # Logs
 logs
