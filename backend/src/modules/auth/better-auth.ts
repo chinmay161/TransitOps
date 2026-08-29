@@ -192,7 +192,7 @@ export const auth = (async () => {
     additionalFields: {
       role: {
         type: 'string',
-        defaultValue: 'pending',
+        defaultValue: 'driver',
         input: false,
         returned: true,
       },
