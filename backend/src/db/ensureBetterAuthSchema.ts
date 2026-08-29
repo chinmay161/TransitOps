@@ -9,6 +9,11 @@ import { Pool } from "pg";
 //   databases without the column are left untouched.
 const statements = [
   `ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'pending'`,
+  // Legacy migration: migrate existing 'pending' users to 'driver'.
+  // The old onboarding flow assigned 'pending' as a holding role.
+  // New onboarding now defaults to 'driver' directly.
+  // This is idempotent: only affects rows where role = 'pending'.
+  `UPDATE users SET role = 'driver' WHERE role = 'pending'`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS image TEXT`,
   // Some deployed databases predate the password_hash column entirely
   // (Google-only auth needs no passwords), so relax the constraint only
