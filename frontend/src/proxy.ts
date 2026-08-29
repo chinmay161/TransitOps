@@ -2,9 +2,6 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { resolveDashboardRoute } from "./utils/resolve-dashboard-route";
 
-const API_BASE_URL =
-  process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-
 // Better Auth session cookies (plain http and __Secure- prefixed https variant)
 const SESSION_COOKIE_NAMES = [
   "better-auth.session_token",
@@ -25,16 +22,18 @@ type SessionState =
 // Verify the session server-to-server. Client state alone can never grant
 // access: the httpOnly Better Auth cookie must resolve to a live backend
 // session with a real TransitOps role.
+// Uses request.nextUrl.origin to construct an absolute URL that works in both
+// localhost development and Vercel production (where NEXT_PUBLIC_API_URL=/api/backend
+// would otherwise result in an empty base URL).
 async function resolveSession(request: NextRequest): Promise<SessionState> {
   if (!hasSessionCookie(request)) {
     return { state: "unauthenticated" };
   }
 
-// Auth always uses the canonical base without the legacy proxy path
-const AUTH_BASE_URL = API_BASE_URL.replace(/\/api\/backend\/?$/, "");
+  const authUrl = `${request.nextUrl.origin}/api/auth/me`;
 
   try {
-    const res = await fetch(`${AUTH_BASE_URL}/api/auth/me`, {
+    const res = await fetch(authUrl, {
       headers: { cookie: request.headers.get("cookie") ?? "" },
       cache: "no-store",
     });
