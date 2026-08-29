@@ -35,12 +35,39 @@ const app = express();
 // Better Auth parses its own request bodies; skip global JSON parsing for
 // its endpoints so the raw stream is preserved for the handler.
 app.use((req, res, next) => {
-  if (req.path.startsWith("/api/auth")) return next();
+  if (req.path.startsWith("/api/auth") || req.path.startsWith("/api/backend")) return next();
   express.json({ limit: "10mb" })(req, res, next);
 });
 app.use(cookieParser());
 
-app.use(cookieParser());
+// Normalize Vercel proxy prefix: /api/backend/* is the legacy proxy path
+// that Vercel rewrites to the backend service with the original URL preserved.
+// Frontend canonical is /api/auth/* (via window.location.origin).
+// This ensures both POST /api/backend/sign-in/social and GET /api/backend/api/auth/me
+// are correctly routed to Better Auth's /api/auth/* handlers without 404.
+app.use((req, _res, next) => {
+  if (req.url.startsWith("/api/backend")) {
+    const stripped = req.url.replace(/^\/api\/backend/, "") || "/";
+    if (stripped === "/health") {
+      req.url = "/api/health";
+    } else if (
+      stripped.startsWith("/sign-in") ||
+      stripped.startsWith("/callback") ||
+      stripped.startsWith("/sign-out") ||
+      stripped.startsWith("/session") ||
+      stripped.startsWith("/get-session") ||
+      stripped.startsWith("/token") ||
+      stripped.startsWith("/ok") ||
+      stripped.startsWith("/error") ||
+      stripped.startsWith("/verify")
+    ) {
+      req.url = `/api/auth${stripped}`;
+    } else {
+      req.url = stripped || "/";
+    }
+  }
+  next();
+});
 
 // Add CORS middleware
 const allowedOrigins = [env.FRONTEND_URL];
@@ -54,6 +81,28 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
+  }
+  next();
+});
+
+// Initialize DB schema early (critical for Vercel serverless cold start)
+// This must be before any route handlers so API requests wait for migrations.
+const initPromise = (async () => {
+  await ensureFuelLogSchema(pool);
+  await ensureExpenseSchema(pool);
+  await ensureAdminSettingsSchema(pool);
+  await ensureEnterpriseOpsSchema(pool);
+  await ensureBetterAuthSchema(pool);
+  await seedVehicles();
+})();
+
+app.use(async (req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    try {
+      await initPromise;
+    } catch (error) {
+      return next(error);
+    }
   }
   next();
 });
@@ -1852,24 +1901,6 @@ process.on("unhandledRejection", (reason: unknown) => {
 
 process.on("uncaughtException", (error: Error) => {
   console.error("[Process] Uncaught Exception:", error);
-});
-
-const initPromise = (async () => {
-  await ensureFuelLogSchema(pool);
-  await ensureExpenseSchema(pool);
-  await ensureAdminSettingsSchema(pool);
-  await ensureEnterpriseOpsSchema(pool);
-  await ensureBetterAuthSchema(pool);
-  await seedVehicles();
-})();
-
-app.use(async (req, res, next) => {
-  try {
-    await initPromise;
-    next();
-  } catch (error) {
-    next(error);
-  }
 });
 
 if (!process.env.VERCEL) {

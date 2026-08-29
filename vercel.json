@@ -19,6 +19,13 @@
             }
         },
         {
+            "source": "/api/health",
+            "destination": {
+                "type": "service",
+                "service": "backend"
+            }
+        },
+        {
             "source": "/api/backend(/.*)?",
             "destination": {
                 "type": "service",
