@@ -42,29 +42,13 @@ app.use(cookieParser());
 
 // Normalize Vercel proxy prefix: /api/backend/* is the legacy proxy path
 // that Vercel rewrites to the backend service with the original URL preserved.
-// Frontend canonical is /api/auth/* (via window.location.origin).
-// This ensures both POST /api/backend/sign-in/social and GET /api/backend/api/auth/me
-// are correctly routed to Better Auth's /api/auth/* handlers without 404.
+// This middleware strips the prefix so the backend can route natively.
 app.use((req, _res, next) => {
   if (req.url.startsWith("/api/backend")) {
     const stripped = req.url.replace(/^\/api\/backend/, "") || "/";
-    if (stripped === "/health") {
-      req.url = "/api/health";
-    } else if (
-      stripped.startsWith("/sign-in") ||
-      stripped.startsWith("/callback") ||
-      stripped.startsWith("/sign-out") ||
-      stripped.startsWith("/session") ||
-      stripped.startsWith("/get-session") ||
-      stripped.startsWith("/token") ||
-      stripped.startsWith("/ok") ||
-      stripped.startsWith("/error") ||
-      stripped.startsWith("/verify")
-    ) {
-      req.url = `/api/auth${stripped}`;
-    } else {
-      req.url = stripped || "/";
-    }
+    req.url = stripped;
+    // Clear Express parsed URL cache so req.path is recomputed for subsequent routers
+    (req as any)._parsedUrl = undefined;
   }
   next();
 });

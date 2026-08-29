@@ -30,8 +30,11 @@ async function resolveSession(request: NextRequest): Promise<SessionState> {
     return { state: "unauthenticated" };
   }
 
+// Auth always uses the canonical base without the legacy proxy path
+const AUTH_BASE_URL = API_BASE_URL.replace(/\/api\/backend\/?$/, "");
+
   try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+    const res = await fetch(`${AUTH_BASE_URL}/api/auth/me`, {
       headers: { cookie: request.headers.get("cookie") ?? "" },
       cache: "no-store",
     });
