@@ -37,29 +37,46 @@ const statements = [
   `ALTER TABLE fuel_logs ADD COLUMN IF NOT EXISTS remarks TEXT`,
   `ALTER TABLE fuel_logs ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now()`,
   `ALTER TABLE fuel_logs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now()`,
-  `UPDATE fuel_logs
-   SET
-     fuel_type = COALESCE(fuel_logs.fuel_type, vehicles.fuel_type),
-     quantity = COALESCE(quantity, liters),
-     unit = COALESCE(unit, 'liters'),
-     price_per_unit = COALESCE(price_per_unit, cost_per_liter),
-     currency = COALESCE(currency, 'INR'),
-     odometer = COALESCE(odometer, odometer_km),
-     remarks = COALESCE(remarks, notes),
-     fuel_station_name = COALESCE(fuel_station_name, 'Manual Entry'),
-     payment_method = COALESCE(payment_method, 'cash')
-   FROM vehicles
-   WHERE vehicles.id = fuel_logs.vehicle_id
-     AND (
-       fuel_logs.fuel_type IS NULL
-       OR quantity IS NULL
-       OR unit IS NULL
-       OR price_per_unit IS NULL
-       OR currency IS NULL
-       OR odometer IS NULL
-       OR fuel_station_name IS NULL
-       OR payment_method IS NULL
-     )`,
+  `DO $$
+   BEGIN
+     IF EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_name = 'fuel_logs' AND column_name = 'liters'
+     ) AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_name = 'fuel_logs' AND column_name = 'cost_per_liter'
+     ) AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_name = 'fuel_logs' AND column_name = 'odometer_km'
+     ) AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_name = 'fuel_logs' AND column_name = 'notes'
+     ) THEN
+       UPDATE fuel_logs
+       SET
+         fuel_type = COALESCE(fuel_logs.fuel_type, vehicles.fuel_type),
+         quantity = COALESCE(quantity, liters),
+         unit = COALESCE(unit, 'liters'),
+         price_per_unit = COALESCE(price_per_unit, cost_per_liter),
+         currency = COALESCE(currency, 'INR'),
+         odometer = COALESCE(odometer, odometer_km),
+         remarks = COALESCE(remarks, notes),
+         fuel_station_name = COALESCE(fuel_station_name, 'Manual Entry'),
+         payment_method = COALESCE(payment_method, 'cash')
+       FROM vehicles
+       WHERE vehicles.id = fuel_logs.vehicle_id
+         AND (
+           fuel_logs.fuel_type IS NULL
+           OR quantity IS NULL
+           OR unit IS NULL
+           OR price_per_unit IS NULL
+           OR currency IS NULL
+           OR odometer IS NULL
+           OR fuel_station_name IS NULL
+           OR payment_method IS NULL
+         );
+     END IF;
+   END $$;`,
   `UPDATE fuel_logs
    SET driver_id = trips.driver_id
    FROM trips
@@ -90,6 +107,7 @@ async function runStatement(pool: Pool, statement: string) {
     const message = error instanceof Error ? error.message : "";
     if (
       message.includes("already exists") ||
+      message.includes("does not exist") ||
       message.includes("constraint") ||
       message.includes("duplicate")
     ) {

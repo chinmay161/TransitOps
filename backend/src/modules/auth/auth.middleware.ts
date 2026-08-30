@@ -1,17 +1,32 @@
 import type { NextFunction, Response } from 'express';
-import { fromNodeHeaders } from 'better-auth/node';
 import type { AuthRequest, UserRole } from './types.js';
 export type { AuthRequest, UserRole };
 import { sendError } from '../../utils/response.js';
 import { auth } from './better-auth.js';
 import pool from '../../config/database.js';
 
+function toWebHeaders(nodeHeaders: Record<string, string | string[] | undefined>): Headers {
+  const headers = new Headers();
+  for (const [key, value] of Object.entries(nodeHeaders)) {
+    if (value === undefined) continue;
+    if (Array.isArray(value)) {
+      for (const v of value) {
+        headers.append(key, v);
+      }
+    } else {
+      headers.set(key, value);
+    }
+  }
+  return headers;
+}
+
 // Validates the Better Auth session cookie and projects it onto req.user with
 // the same contract the rest of the app already consumes (userId, role, email).
 export async function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const session = await auth.api.getSession({
-      headers: fromNodeHeaders(req.headers),
+    const authInstance = await auth;
+    const session = await authInstance.api.getSession({
+      headers: toWebHeaders(req.headers),
     });
 
     if (!session?.user) {

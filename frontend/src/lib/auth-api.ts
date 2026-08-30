@@ -1,4 +1,10 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const getBaseURL = () => {
+  if (typeof window !== "undefined") return window.location.origin;
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  return "http://localhost:5000";
+};
+const BASE_URL = getBaseURL();
+const AUTH_BASE_URL = BASE_URL.replace(/\/api\/backend\/?$/, "");
 
 export class AuthApiError extends Error {
   constructor(
@@ -16,7 +22,9 @@ async function request<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${BASE_URL}${endpoint}`;
+  // Use AUTH_BASE_URL for auth endpoints, and BASE_URL for normal API endpoints
+  const isAuth = endpoint.startsWith("/api/auth/");
+  const url = `${isAuth ? AUTH_BASE_URL : BASE_URL}${endpoint}`;
   let res: Response;
   try {
     res = await fetch(url, {

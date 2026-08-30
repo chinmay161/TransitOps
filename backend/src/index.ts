@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import express, { NextFunction, Request, Response } from "express";
 import cookieParser from "cookie-parser";
 import { AdminSettingsController } from "./controllers/adminSettingsController";
@@ -29,7 +28,6 @@ import { NotificationService } from "./services/notificationService";
 import { ReportService } from "./services/reportService";
 import { ApiError, sendError } from "./utils/api";
 import { authMeRouter, authenticate, authorizeModule, authorize, auth } from "./modules/auth/index.js";
-import { toNodeHandler } from "better-auth/node";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -37,10 +35,23 @@ const app = express();
 // Better Auth parses its own request bodies; skip global JSON parsing for
 // its endpoints so the raw stream is preserved for the handler.
 app.use((req, res, next) => {
-  if (req.path.startsWith("/api/auth")) return next();
+  if (req.path.startsWith("/api/auth") || req.path.startsWith("/api/backend")) return next();
   express.json({ limit: "10mb" })(req, res, next);
 });
 app.use(cookieParser());
+
+// Normalize Vercel proxy prefix: /api/backend/* is the legacy proxy path
+// that Vercel rewrites to the backend service with the original URL preserved.
+// This middleware strips the prefix so the backend can route natively.
+app.use((req, _res, next) => {
+  if (req.url.startsWith("/api/backend")) {
+    const stripped = req.url.replace(/^\/api\/backend/, "") || "/";
+    req.url = stripped;
+    // Clear Express parsed URL cache so req.path is recomputed for subsequent routers
+    (req as any)._parsedUrl = undefined;
+  }
+  next();
+});
 
 // Add CORS middleware
 const allowedOrigins = [env.FRONTEND_URL];
@@ -54,6 +65,28 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
+  }
+  next();
+});
+
+// Initialize DB schema early (critical for Vercel serverless cold start)
+// This must be before any route handlers so API requests wait for migrations.
+const initPromise = (async () => {
+  await ensureFuelLogSchema(pool);
+  await ensureExpenseSchema(pool);
+  await ensureAdminSettingsSchema(pool);
+  await ensureEnterpriseOpsSchema(pool);
+  await ensureBetterAuthSchema(pool);
+  await seedVehicles();
+})();
+
+app.use(async (req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    try {
+      await initPromise;
+    } catch (error) {
+      return next(error);
+    }
   }
   next();
 });
@@ -1814,8 +1847,8 @@ app.delete('/trips/:id', async (req: Request, res: Response) => {
 // session get, sign-out). The custom /me profile route must be registered
 // before the Better Auth catch-all handler.
 app.use("/api/auth", authMeRouter);
-const betterAuthHandler = toNodeHandler(auth);
-app.all("/api/auth/*", (req: Request, res: Response, next: NextFunction) => {
+const betterAuthNodePkg = import("better-auth/node");
+app.all("/api/auth/*", async (req: Request, res: Response, next: NextFunction) => {
   if (process.env.AUTH_DEBUG === "1") {
     const hasState = Boolean((req.query as any).state);
     console.log(
@@ -1824,7 +1857,15 @@ app.all("/api/auth/*", (req: Request, res: Response, next: NextFunction) => {
       }`
     );
   }
-  Promise.resolve(betterAuthHandler(req, res)).catch(next);
+  
+  try {
+    const { toNodeHandler } = await betterAuthNodePkg;
+    const authInstance = await auth;
+    const betterAuthHandler = toNodeHandler(authInstance);
+    await betterAuthHandler(req, res);
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.get("/api/health", (_req: Request, res: Response) => {
@@ -1846,22 +1887,15 @@ process.on("uncaughtException", (error: Error) => {
   console.error("[Process] Uncaught Exception:", error);
 });
 
-async function startServer() {
-  await ensureFuelLogSchema(pool);
-  await ensureExpenseSchema(pool);
-  await ensureAdminSettingsSchema(pool);
-  await ensureEnterpriseOpsSchema(pool);
-  await ensureBetterAuthSchema(pool);
-
-  app.listen(env.PORT, () => {
-    console.log(`Server is running on port ${env.PORT}`);
-    seedVehicles();
+if (!process.env.VERCEL) {
+  initPromise.then(() => {
+    app.listen(env.PORT, () => {
+      console.log(`Server is running on port ${env.PORT}`);
+    });
+  }).catch((error) => {
+    console.error("Failed to start server", error);
+    process.exit(1);
   });
 }
-
-void startServer().catch((error) => {
-  console.error("Failed to start server", error);
-  process.exit(1);
-});
 
 export default app;

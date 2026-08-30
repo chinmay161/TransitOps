@@ -5,10 +5,26 @@
             "framework": "nextjs"
         },
         "backend": {
-            "root": "backend"
+            "root": "backend",
+            "framework": "express",
+            "entrypoint": "src/index.ts"
         }
     },
     "rewrites": [
+        {
+            "source": "/api/auth(/.*)?",
+            "destination": {
+                "type": "service",
+                "service": "backend"
+            }
+        },
+        {
+            "source": "/api/health",
+            "destination": {
+                "type": "service",
+                "service": "backend"
+            }
+        },
         {
             "source": "/api/backend(/.*)?",
             "destination": {
