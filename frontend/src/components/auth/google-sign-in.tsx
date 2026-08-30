@@ -9,12 +9,18 @@ import { useAuth } from "@/context/auth-context";
 // Server-side signup/login enforcement codes (see backend better-auth.ts):
 // - email_already_exists : Sign Up used with an email that already belongs to
 //   a TransitOps account. Terminal state: log in instead.
-// - signup_disabled / unable_to_create_user :
+// - signup_disabled / unable_to_create_user / account_not_found :
 //   Log In used with a Google email that has no TransitOps account. Offer Sign Up.
 const EMAIL_EXISTS_CODES = new Set([
   "email_already_exists",
   "unable_to_link_account",
   "email_exists",
+]);
+
+const ACCOUNT_NOT_FOUND_CODES = new Set([
+  "signup_disabled",
+  "unable_to_create_user",
+  "account_not_found",
 ]);
 
 function GoogleIcon() {
@@ -47,14 +53,15 @@ export function GoogleSignIn() {
 
   const errorParams = searchParams.getAll("error");
   const isEmailExistsError = errorParams.some(e => EMAIL_EXISTS_CODES.has(e));
+  const isAccountNotFound = errorParams.some(e => ACCOUNT_NOT_FOUND_CODES.has(e));
 
   useEffect(() => {
-    if (errorParams.length > 0 && !isEmailExistsError) {
+    if (errorParams.length > 0 && !isEmailExistsError && !isAccountNotFound) {
       toast.error(
         "Google sign-in failed or was cancelled. Please try again."
       );
     }
-  }, [errorParams.length, isEmailExistsError]);
+  }, [errorParams.length, isEmailExistsError, isAccountNotFound]);
 
   async function handleGoogleFlow(intent: "login" | "signup") {
     setLoading(true);
@@ -97,6 +104,37 @@ export function GoogleSignIn() {
           className="w-full"
         >
           {loading ? "Redirecting to Google..." : "Log In"}
+          {!loading && <GoogleIcon />}
+        </Button>
+      </div>
+    );
+  }
+
+  // TERMINAL STATE B: Log In attempted with a Google email that has no
+  // TransitOps account. Prompt to sign up instead.
+  if (isAccountNotFound) {
+    return (
+      <div className="flex flex-col gap-5">
+        <div
+          className="rounded-lg border px-4 py-4 text-sm leading-relaxed"
+          role="alert"
+          style={{
+            borderColor: "rgba(245, 158, 11, 0.45)",
+            background: "rgba(245, 158, 11, 0.08)",
+            color: "var(--text-primary)",
+          }}
+        >
+          Account not found. Please sign up first to create your TransitOps
+          account.
+        </div>
+
+        <Button
+          onClick={() => void handleGoogleFlow("signup")}
+          loading={loading}
+          size="lg"
+          className="w-full"
+        >
+          {loading ? "Redirecting to Google..." : "Sign Up with Google"}
           {!loading && <GoogleIcon />}
         </Button>
       </div>

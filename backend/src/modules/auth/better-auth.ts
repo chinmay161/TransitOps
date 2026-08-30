@@ -4,7 +4,7 @@ import { pool } from '../../db/pool.js';
 import { env } from '../../config/env.js';
 
 // ---------------------------------------------------------------------------
-// Sign-up intent enforcement (Google-only auth)
+// Sign-up intent enforcement (OAuth sign-up flows)
 // ---------------------------------------------------------------------------
 // The frontend encodes intent in the OAuth callbackURL:
 //   Login   -> <frontend>/login
@@ -114,7 +114,7 @@ export const auth = (async () => {
   // readable message instead of the backend 404 page.
   onAPIError: { errorURL: `${env.FRONTEND_URL}/login` },
   database: pool,
-  emailAndPassword: { enabled: false },
+  emailAndPassword: { enabled: true },
   hooks: {
     before: async (ctx) => {
       // Capture signup intent at OAuth start. addOAuthServerContext embeds it
@@ -347,13 +347,62 @@ export const auth = (async () => {
     },
     session: {
       create: {
-        // Final gate BEFORE any session is minted. Signup intent requires the
-        // fresh-user marker written for THIS state token - so an already-linked
-        // identity (findAccountOwnerByKey -> existing account -> straight here,
-        // where no user/account create hook fires) is rejected. Throwing
-        // APIError propagates to the callback handler which redirects to
-        // onAPIError.errorURL with ?error=email_already_exists - no cookie.
+        // Final gate BEFORE any session is minted.
+        //
+        // 1. Admin restriction: admin-role users may ONLY obtain sessions
+        //    via credential sign-in (POST /sign-in/email).  OAuth-sourced
+        //    sessions for admin users are blocked.  Credential sign-in for
+        //    non-admin users is also blocked.
+        //
+        // 2. Signup-intent enforcement: the fresh-user marker written for
+        //    THIS state token must exist - so an already-linked identity
+        //    (findAccountOwnerByKey -> existing account -> straight here,
+        //    where no user/account create hook fires) is rejected.
         before: async (session: any, context) => {
+          // ---- Admin restriction ----
+          if (session?.userId) {
+            try {
+              const userResult = await pool.query(
+                'SELECT role FROM users WHERE id = $1',
+                [session.userId]
+              );
+              const userRole = userResult.rows[0]?.role as string | undefined;
+
+              // Determine auth method from request URL path.
+              let requestPath = '';
+              try {
+                requestPath = new URL(context?.request?.url || '').pathname;
+              } catch {}
+              const isCredentialSignIn = requestPath.includes('/sign-in/email');
+
+              // Admin users may ONLY authenticate via credential sign-in.
+              if (userRole === 'admin' && !isCredentialSignIn) {
+                authDebug(`session gate: blocked OAuth session for admin user`);
+                throw new APIError('BAD_REQUEST', {
+                  code: 'admin_auth_required',
+                  message:
+                    'Admin accounts must use the dedicated admin login page.',
+                });
+              }
+
+              // Credential sign-in is restricted to admin accounts.
+              if (userRole && userRole !== 'admin' && isCredentialSignIn) {
+                authDebug(`session gate: blocked credential auth for non-admin user`);
+                throw new APIError('BAD_REQUEST', {
+                  code: 'credential_restricted',
+                  message:
+                    'Credential authentication is restricted to admin accounts.',
+                });
+              }
+            } catch (e) {
+              // Re-throw APIErrors (our own blocks); log and continue for
+              // unexpected DB errors so auth is not silently broken.
+              if (e instanceof APIError) throw e;
+              authDebug(`Admin restriction check failed: ${e}`);
+            }
+          }
+
+          // ---- Signup-intent enforcement ----
           const st = await readFlowState();
           
           let signupIntentCookie = false;

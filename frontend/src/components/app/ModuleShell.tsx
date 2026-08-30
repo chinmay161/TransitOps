@@ -21,12 +21,12 @@ export function ModuleShell({
   const dashboardSlug = role ? resolveDashboardRoute(role).substring(1) : "login";
 
   const allTabs = [
-    { slug: dashboardSlug, label: "dashboard" },
-    { slug: "expenses", label: "expenses" },
-    { slug: "reports", label: "reports" },
-    { slug: "notifications", label: "notifications" },
-    { slug: "users", label: "user directory" },
-    { slug: "admin-settings", label: "admin settings" },
+    { slug: dashboardSlug, label: "Dashboard" },
+    { slug: "expenses", label: "Expenses" },
+    { slug: "reports", label: "Reports" },
+    { slug: "notifications", label: "Notifications" },
+    { slug: "users", label: "User Directory" },
+    { slug: "admin-settings", label: "Admin Settings" },
   ];
 
   const allowedTabs = allTabs.filter((tab) => {

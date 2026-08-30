@@ -70,7 +70,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const callbackURL = new URL("/login", frontendOrigin);
       if (intent === "signup") callbackURL.searchParams.set("intent", "signup");
       const errorCallbackURL = new URL("/login", frontendOrigin);
-      errorCallbackURL.searchParams.set("error", "oauth");
 
       const result = await authClient.signIn.social({
         provider: "google",

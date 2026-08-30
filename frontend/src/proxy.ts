@@ -88,9 +88,50 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Auth pages: signed-in users go straight to their destination
+  // ---- /admin/login: dedicated admin credential sign-in ----
+  if (pathname === "/admin/login") {
+    if (session.state === "authenticated") {
+      // Already signed in — redirect to appropriate destination
+      if (session.role === "admin") {
+        return redirectTo(request, "/admin-settings");
+      }
+      if (KNOWN_ROLES.includes(session.role)) {
+        return redirectTo(request, resolveDashboardRoute(session.role));
+      }
+      return redirectTo(request, "/pending");
+    }
+    // Unauthenticated: allow access to admin login page
+    return NextResponse.next();
+  }
+
+  // ---- /admin-settings: admin-only destination ----
+  if (pathname === "/admin-settings" || pathname.startsWith("/admin-settings/")) {
+    if (session.state !== "authenticated") {
+      // Unauthenticated → admin login (not generic /login)
+      const target =
+        session.state === "unknown"
+          ? "/admin/login?error=server"
+          : "/admin/login";
+      return clearSessionCookies(redirectTo(request, target));
+    }
+    // Non-admin users cannot access admin-settings
+    if (session.role !== "admin") {
+      if (KNOWN_ROLES.includes(session.role)) {
+        return redirectTo(request, resolveDashboardRoute(session.role));
+      }
+      return redirectTo(request, "/pending");
+    }
+    // Admin: allow
+    return NextResponse.next();
+  }
+
+  // ---- /login: normal user login ----
   if (pathname === "/login") {
     if (session.state === "authenticated") {
+      // Admin users should use /admin/login, not /login
+      if (session.role === "admin") {
+        return redirectTo(request, "/admin-settings");
+      }
       if (!KNOWN_ROLES.includes(session.role)) {
         return redirectTo(request, "/pending");
       }
@@ -99,7 +140,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Private pages require a verified session
+  // ---- All other private pages ----
   if (session.state !== "authenticated") {
     const target =
       session.state === "unknown" ? "/login?error=server" : "/login";
@@ -112,6 +153,9 @@ export async function proxy(request: NextRequest) {
   if (!KNOWN_ROLES.includes(role)) {
     return redirectTo(request, "/pending");
   }
+
+  // Admin users should use /admin-settings, not regular pages
+  // (but allow them access to everything since they have full access)
 
   // Enforce role-based client routing constraints
   if (role === "driver") {
@@ -150,7 +194,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - icon.svg (vector favicon file)
+     * - icon.svg (vector icon file)
      * - public (public assets)
      */
     "/((?!_next/static|_next/image|favicon.ico|icon.svg|api|public).*)",

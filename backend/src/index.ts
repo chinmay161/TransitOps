@@ -13,6 +13,7 @@ import { ensureEnterpriseOpsSchema } from "./db/ensureEnterpriseOpsSchema";
 import { ensureExpenseSchema } from "./db/ensureExpenseSchema";
 import { ensureFuelLogSchema } from "./db/ensureFuelLogSchema";
 import { pool } from "./db/pool";
+import { seedAdminAccounts } from "./db/seedAdminAccounts";
 import { createAdminSettingsRouter } from "./routes/adminSettingsRoutes";
 import { createDashboardRouter } from "./routes/dashboardRoutes";
 import { createExpenseRouter } from "./routes/expenseRoutes";
@@ -78,6 +79,7 @@ const initPromise = (async () => {
   await ensureEnterpriseOpsSchema(pool);
   await ensureBetterAuthSchema(pool);
   await seedVehicles();
+  await seedAdminAccounts(pool);
 })();
 
 app.use(async (req, res, next) => {
