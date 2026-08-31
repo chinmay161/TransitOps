@@ -82,11 +82,19 @@ export interface UserDirectoryEntry {
   phone: string | null;
   email_verified: boolean;
   is_active: boolean;
-  approval_status: string;
   created_at: string;
-  last_login: string | null;
 }
 
 export async function fetchUsers(): Promise<UserDirectoryEntry[]> {
   return request<UserDirectoryEntry[]>("/api/users");
+}
+
+export async function updateUserRole(
+  userId: string,
+  role: string
+): Promise<UserDirectoryEntry> {
+  return request<UserDirectoryEntry>(`/api/users/${userId}/role`, {
+    method: "PATCH",
+    body: JSON.stringify({ role }),
+  });
 }

@@ -33,6 +33,13 @@
             }
         },
         {
+            "source": "/api/(.*)",
+            "destination": {
+                "type": "service",
+                "service": "backend"
+            }
+        },
+        {
             "source": "/(.*)",
             "destination": {
                 "type": "service",
