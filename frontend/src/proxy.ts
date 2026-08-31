@@ -93,7 +93,7 @@ export async function proxy(request: NextRequest) {
     if (session.state === "authenticated") {
       // Already signed in — redirect to appropriate destination
       if (session.role === "admin") {
-        return redirectTo(request, "/admin-settings");
+        return redirectTo(request, "/dashboard/users");
       }
       if (KNOWN_ROLES.includes(session.role)) {
         return redirectTo(request, resolveDashboardRoute(session.role));
@@ -104,7 +104,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // ---- /admin-settings: admin-only destination ----
+  // ---- /admin-settings: redirect admins to user management ----
   if (pathname === "/admin-settings" || pathname.startsWith("/admin-settings/")) {
     if (session.state !== "authenticated") {
       // Unauthenticated → admin login (not generic /login)
@@ -121,8 +121,8 @@ export async function proxy(request: NextRequest) {
       }
       return redirectTo(request, "/pending");
     }
-    // Admin: allow
-    return NextResponse.next();
+    // Admin: redirect to user management
+    return redirectTo(request, "/dashboard/users");
   }
 
   // ---- /login: normal user login ----
@@ -130,7 +130,7 @@ export async function proxy(request: NextRequest) {
     if (session.state === "authenticated") {
       // Admin users should use /admin/login, not /login
       if (session.role === "admin") {
-        return redirectTo(request, "/admin-settings");
+        return redirectTo(request, "/dashboard/users");
       }
       if (!KNOWN_ROLES.includes(session.role)) {
         return redirectTo(request, "/pending");
@@ -154,8 +154,7 @@ export async function proxy(request: NextRequest) {
     return redirectTo(request, "/pending");
   }
 
-  // Admin users should use /admin-settings, not regular pages
-  // (but allow them access to everything since they have full access)
+  // Admin users have full access
 
   // Enforce role-based client routing constraints
   if (role === "driver") {
