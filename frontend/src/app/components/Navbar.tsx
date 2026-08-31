@@ -16,7 +16,7 @@ const DASHBOARD_ROUTES = [
   "/fuel-log",
   "/expenses",
   "/reports",
-  "/users",
+  "/dashboard/users",
   "/admin-settings",
   "/notifications",
 ];

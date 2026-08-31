@@ -25,7 +25,7 @@ export function ModuleShell({
     { slug: "expenses", label: "Expenses" },
     { slug: "reports", label: "Reports" },
     { slug: "notifications", label: "Notifications" },
-    { slug: "users", label: "User Directory" },
+    { slug: "dashboard/users", label: "User Management" },
     { slug: "admin-settings", label: "Admin Settings" },
   ];
 
@@ -37,7 +37,7 @@ export function ModuleShell({
       return [dashboardSlug, "notifications"].includes(tab.slug);
     }
     if (role === "fleet_manager") {
-      return [dashboardSlug, "expenses", "reports", "notifications", "users"].includes(tab.slug);
+      return [dashboardSlug, "expenses", "reports", "notifications", "dashboard/users"].includes(tab.slug);
     }
     return true;
   });
