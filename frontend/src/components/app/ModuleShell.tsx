@@ -26,10 +26,12 @@ export function ModuleShell({
     { slug: "reports", label: "Reports" },
     { slug: "notifications", label: "Notifications" },
     { slug: "dashboard/users", label: "User Management" },
-    { slug: "admin-settings", label: "Admin Settings" },
   ];
 
   const allowedTabs = allTabs.filter((tab) => {
+    if (role === "admin") {
+      return ["dashboard/users", "expenses", "reports", "notifications"].includes(tab.slug);
+    }
     if (role === "driver") {
       return [dashboardSlug, "expenses", "notifications"].includes(tab.slug);
     }

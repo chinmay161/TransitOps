@@ -4,7 +4,7 @@ const roleRoutes: Record<UserRole, string> = {
   driver: "/dashboard",
   dispatcher: "/drivers",
   fleet_manager: "/vehicles",
-  admin: "/dashboard",
+  admin: "/dashboard/users",
 };
 
 export function resolveDashboardRoute(role: UserRole | string): string {
